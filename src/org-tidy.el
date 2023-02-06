@@ -41,24 +41,25 @@ not really placed in the text, it is just shown in the overlay"
   "Variable to store the regions we put an overlay on.")
 
 ;;;###autoload
-(defun hide-region-hide ()
+(defun hide-region-hide (beg end)
   "Hides a region by making an invisible overlay over it and save the
 overlay on the hide-region-overlays \"ring\""
   (interactive)
-  (let ((new-overlay (make-overlay (mark) (point))))
+  (let ((new-overlay (make-overlay beg end)))
     (push new-overlay hide-region-overlays)
     (overlay-put new-overlay 'invisible t)
     (overlay-put new-overlay 'intangible t)
-    (overlay-put new-overlay 'before-string
-                 (if hide-region-propertize-markers
-                     (propertize hide-region-before-string
-                                 'font-lock-face 'hide-region-before-string-face)
-                   hide-region-before-string))
-    (overlay-put new-overlay 'after-string
-                 (if hide-region-propertize-markers
-                     (propertize hide-region-after-string
-                                 'font-lock-face 'hide-region-after-string-face)
-                   hide-region-after-string))))
+    ;; (overlay-put new-overlay 'before-string
+    ;;              (if hide-region-propertize-markers
+    ;;                  (propertize hide-region-before-string
+    ;;                              'font-lock-face 'hide-region-before-string-face)
+    ;;                hide-region-before-string))
+    ;; (overlay-put new-overlay 'after-string
+    ;;              (if hide-region-propertize-markers
+    ;;                  (propertize hide-region-after-string
+    ;;                              'font-lock-face 'hide-region-after-string-face)
+    ;;                hide-region-after-string))
+    ))
 
 ;;;###autoload
 (defun hide-region-unhide ()
@@ -72,10 +73,13 @@ deleting the overlay from the hide-region-overlays \"ring\"."
 (defun org-tidy ()
   (interactive)
   (save-excursion
-    (while (re-search-forward org-property-drawer-re nil t)
-      (let* ((beg (1- (match-beginning 1)))
-             (end (1+ (match-end 1))))
-        (message "beg:%s end:%s" beg end)))))
+    (goto-char (point-min))
+    (let* ((regions '()))
+      (while (re-search-forward org-property-drawer-re nil t)
+        (let* ((beg (match-beginning 0))
+               (end (1+ (match-end 0))))
+          (push (list beg end) regions)))
+      regions)))
 
 (provide 'org-tidy)
 
