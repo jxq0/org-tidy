@@ -49,10 +49,13 @@ overlay on the hide-region-overlays \"ring\""
     (push new-overlay hide-region-overlays)
     (overlay-put new-overlay 'invisible t)
     (overlay-put new-overlay 'intangible t)
+    ;; (overlay-put new-overlay 'display '((margin left-margin) "x"))
+    (overlay-put new-overlay 'display '(left-fringe flycheck-fringe-bitmap-double-arrow))
     ;; (overlay-put new-overlay 'before-string
     ;;              (if hide-region-propertize-markers
     ;;                  (propertize hide-region-before-string
-    ;;                              'font-lock-face 'hide-region-before-string-face)
+    ;;                              'font-lock-face 'hide-region-before-string-face
+    ;;                              'display '((margin left-margin) "◎"))
     ;;                hide-region-before-string))
     ;; (overlay-put new-overlay 'after-string
     ;;              (if hide-region-propertize-markers
@@ -78,6 +81,7 @@ deleting the overlay from the hide-region-overlays \"ring\"."
       (while (re-search-forward org-property-drawer-re nil t)
         (let* ((beg (match-beginning 0))
                (end (1+ (match-end 0))))
+          (hide-region-hide beg end)
           (push (list beg end) regions)))
       regions)))
 
