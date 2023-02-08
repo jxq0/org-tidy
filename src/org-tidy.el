@@ -12,79 +12,45 @@
   :prefix "hide-region-"
   :group 'convenience)
 
-(defcustom hide-region-before-string "@["
-  "String to mark the beginning of an invisible region. This string is
-not really placed in the text, it is just shown in the overlay"
-  :type 'string
-  :group 'hide-region)
-
-(defcustom hide-region-after-string "]@"
-  "String to mark the beginning of an invisible region. This string is
-not really placed in the text, it is just shown in the overlay"
-  :type 'string
-  :group 'hide-region)
-
 (defcustom hide-region-propertize-markers t
   "If non-nil, add text properties to the region markers."
   :type 'boolean
   :group 'hide-region)
 
-(defface hide-region-before-string-face
-  '((t (:inherit region)))
-  "Face for the before string.")
-
-(defface hide-region-after-string-face
-  '((t (:inherit region)))
-  "Face for the after string.")
-
-(defvar hide-region-overlays nil
+(defvar org-tidy-overlays nil
   "Variable to store the regions we put an overlay on.")
 
-;;;###autoload
-(defun hide-region-hide (beg end)
-  "Hides a region by making an invisible overlay over it and save the
-overlay on the hide-region-overlays \"ring\""
-  (interactive)
-  (let ((new-overlay (make-overlay beg end)))
-    (push new-overlay hide-region-overlays)
-    (overlay-put new-overlay 'invisible t)
-    (overlay-put new-overlay 'intangible t)
-    ;; (overlay-put new-overlay 'display '((margin left-margin) "x"))
-    (overlay-put new-overlay 'display '(left-fringe flycheck-fringe-bitmap-double-arrow))
-    ;; (overlay-put new-overlay 'before-string
-    ;;              (if hide-region-propertize-markers
-    ;;                  (propertize hide-region-before-string
-    ;;                              'font-lock-face 'hide-region-before-string-face
-    ;;                              'display '((margin left-margin) "◎"))
-    ;;                hide-region-before-string))
-    ;; (overlay-put new-overlay 'after-string
-    ;;              (if hide-region-propertize-markers
-    ;;                  (propertize hide-region-after-string
-    ;;                              'font-lock-face 'hide-region-after-string-face)
-    ;;                hide-region-after-string))
-    ))
 
-;;;###autoload
-(defun hide-region-unhide ()
-  "Unhide a region at a time, starting with the last one hidden and
-deleting the overlay from the hide-region-overlays \"ring\"."
+(defun org-tidy-hide (beg end)
+  "Hides a region by making an invisible overlay over it."
   (interactive)
-  (when (car hide-region-overlays)
-    (delete-overlay (car hide-region-overlays))
-    (setq hide-region-overlays (cdr hide-region-overlays))))
+  (unless (assoc (list beg end) org-tidy-overlays)
+    (let ((new-overlay (make-overlay beg end)))
+      (overlay-put new-overlay 'invisible t)
+      (overlay-put new-overlay 'intangible t)
+      (overlay-put new-overlay 'display
+                   '(left-fringe flycheck-fringe-bitmap-double-arrow))
+      (push (cons (list beg end) new-overlay) org-tidy-overlays))))
+
+(defun org-untidy ()
+  "Untidy."
+  (interactive)
+  (while org-tidy-overlays
+    (let* ((ov (cdar org-tidy-overlays)))
+      (message "ov:%s" ov)
+      (delete-overlay ov)
+      (setf org-tidy-overlays (cdr org-tidy-overlays)))))
 
 (defun org-tidy ()
+  "Tidy."
   (interactive)
   (save-excursion
     (goto-char (point-min))
-    (let* ((regions '()))
-      (while (re-search-forward org-property-drawer-re nil t)
+    (while (re-search-forward org-property-drawer-re nil t)
         (let* ((beg (match-beginning 0))
                (end (1+ (match-end 0))))
-          (hide-region-hide beg end)
-          (push (list beg end) regions)))
-      regions)))
+          (org-tidy-hide beg end)))))
 
 (provide 'org-tidy)
 
-;;; org-stealth.el ends here
+;;; org-tidy.el ends here
