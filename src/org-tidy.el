@@ -7,19 +7,23 @@
 
 ;;; Code:
 
-(defgroup hide-region nil
-  "Functions to hide region using an overlay with the invisible property.  The text is not affected."
-  :prefix "hide-region-"
+(defgroup org-tidy nil
+  "Give you a clean org-mode buffer."
+  :prefix "org-tidy-"
   :group 'convenience)
 
-(defcustom hide-region-propertize-markers t
+(defcustom org-tidy-properties t
   "If non-nil, add text properties to the region markers."
   :type 'boolean
-  :group 'hide-region)
+  :group 'org-tidy)
 
-(defvar org-tidy-overlays nil
+(defcustom org-tidy-src-block t
+  "If non-nil, add text properties to the region markers."
+  :type 'boolean
+  :group 'org-tidy)
+
+(defvar-local org-tidy-overlays nil
   "Variable to store the regions we put an overlay on.")
-
 
 (defun org-tidy-hide (beg end)
   "Hides a region by making an invisible overlay over it."
@@ -30,6 +34,20 @@
       (overlay-put new-overlay 'intangible t)
       (overlay-put new-overlay 'display
                    '(left-fringe flycheck-fringe-bitmap-double-arrow))
+      (push (cons (list beg end) new-overlay) org-tidy-overlays))))
+
+(defun org-tidy-src (beg end)
+  "Hides a region by making an invisible overlay over it."
+  (interactive)
+  (unless (assoc (list beg end) org-tidy-overlays)
+    (let ((new-overlay (make-overlay beg end)))
+      (overlay-put new-overlay 'invisible t)
+      (overlay-put new-overlay 'intangible t)
+      ;; add underline
+      ;; remove background
+      ;; add language name
+      ;; hide end_src
+      ;; end_src overline
       (push (cons (list beg end) new-overlay) org-tidy-overlays))))
 
 (defun org-untidy ()

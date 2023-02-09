@@ -3,8 +3,19 @@
 :END:
 #+title: My Org Notes
 
-* This is an example headline
+* This is an example headline                                      :tag:tag2:
 :PROPERTIES:
 :ID:       8335CF4B-A5ED-4E10-8E3A-3A2A48E2AB76
 :END:
-s
+
+#+begin_src emacs-lisp
+(defun org-tidy ()
+  "Tidy."
+  (interactive)
+  (save-excursion
+    (goto-char (point-min))
+    (while (re-search-forward org-property-drawer-re nil t)
+        (let* ((beg (match-beginning 0))
+               (end (1+ (match-end 0))))
+          (org-tidy-hide beg end)))))
+#+end_src
