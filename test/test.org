@@ -22,7 +22,7 @@
 
 #+begin_src emacs-lisp :results silent
 (org-untidy)
-(org-tidy-src-overlay 237 259)
+(org-tidy-src)
 #+end_src
 
 

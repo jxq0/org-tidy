@@ -43,7 +43,8 @@
     (let ((new-overlay (make-overlay beg end)))
       (overlay-put new-overlay 'invisible t)
       ;; (overlay-put new-overlay 'intangible t)
-      (overlay-put new-overlay 'before-string "src")
+      ;; (overlay-put new-overlay 'before-string "src")
+      (overlay-put new-overlay 'display "src\n")
       ;; add underline
       ;; remove background
       ;; add language name
@@ -52,15 +53,24 @@
       (push (cons (list beg end) new-overlay) org-tidy-overlays))))
 
 (defun org-tidy-src-single (src)
-  (let* ((pl (cadr src)))
-    (plist-get pl :language)))
+  (let* ((pl (cadr src))
+         (begin (plist-get pl :begin))
+         (end (progn
+                (goto-char begin)
+                (goto-char (line-end-position))
+                (point))))
+    begin end))
 
 (defun org-tidy-src ()
   "Tidy source blocks."
   (interactive)
-  (org-element-map (org-element-parse-buffer) 'src-block #'org-tidy-src-single)
-
-  )
+  (save-excursion
+    (let* ((res (org-element-map (org-element-parse-buffer)
+                    'src-block #'org-tidy-src-single)))
+      ;; (mapcar (lambda (beg) (org-tidy-src-overlay beg (+ 11 beg)))
+      ;;         begin-list)
+      res
+      )))
 
 (defun org-untidy ()
   "Untidy."
