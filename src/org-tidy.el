@@ -36,19 +36,31 @@
                    '(left-fringe flycheck-fringe-bitmap-double-arrow))
       (push (cons (list beg end) new-overlay) org-tidy-overlays))))
 
-(defun org-tidy-src (beg end)
+(defun org-tidy-src-overlay (beg end)
   "Hides a region by making an invisible overlay over it."
   (interactive)
   (unless (assoc (list beg end) org-tidy-overlays)
     (let ((new-overlay (make-overlay beg end)))
       (overlay-put new-overlay 'invisible t)
-      (overlay-put new-overlay 'intangible t)
+      ;; (overlay-put new-overlay 'intangible t)
+      (overlay-put new-overlay 'before-string "src")
       ;; add underline
       ;; remove background
       ;; add language name
       ;; hide end_src
       ;; end_src overline
       (push (cons (list beg end) new-overlay) org-tidy-overlays))))
+
+(defun org-tidy-src-single (src)
+  (let* ((pl (cadr src)))
+    (plist-get pl :language)))
+
+(defun org-tidy-src ()
+  "Tidy source blocks."
+  (interactive)
+  (org-element-map (org-element-parse-buffer) 'src-block #'org-tidy-src-single)
+
+  )
 
 (defun org-untidy ()
   "Untidy."

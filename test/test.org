@@ -19,3 +19,13 @@
                (end (1+ (match-end 0))))
           (org-tidy-hide beg end)))))
 #+end_src
+
+#+begin_src emacs-lisp :results silent
+(org-untidy)
+(org-tidy-src-overlay 237 259)
+#+end_src
+
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+
+Maecenas vel arcu tempor, luctus mauris nec, aliquet est. Aliquam tincidunt magna nisi. In eget tempor ligula. Suspendisse interdum justo velit, in rutrum magna porttitor pellentesque. Sed tempus blandit magna, sed iaculis neque. Donec est mi, placerat quis tincidunt ac, vulputate ac libero. Maecenas vitae felis accumsan, varius nibh ac, volutpat leo. Etiam a nibh fermentum magna tempor pellentesque ac non orci.
