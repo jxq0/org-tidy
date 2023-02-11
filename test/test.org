@@ -20,10 +20,17 @@
           (org-tidy-hide beg end)))))
 #+end_src
 
-#+begin_src emacs-lisp :results silent
+s
+
+#+begin_src emacs-lisp :results raw
 (org-untidy)
 (org-tidy-src)
 #+end_src
+
+#+RESULTS:
+((((237 248) . #<overlay from 237 to 248 in test.org>) ((531 540) . #<overlay from 531 to 540 in test.org>)) (((545 556) . #<overlay from 545 to 556 in test.org>) ((609 618) . #<overlay from 609 to 618 in test.org>) ((237 248) . #<overlay from 237 to 248 in test.org>) ((531 540) . #<overlay from 531 to 540 in test.org>)))
+((((237 248) . #<overlay from 237 to 248 in test.org>) ((531 540) . #<overlay from 531 to 540 in test.org>)) (((545 556) . #<overlay from 545 to 556 in test.org>) ((609 618) . #<overlay from 609 to 618 in test.org>) ((237 248) . #<overlay from 237 to 248 in test.org>) ((531 540) . #<overlay from 531 to 540 in test.org>)))
+((((237 249) . #<overlay from 237 to 249 in test.org>) ((531 540) . #<overlay from 531 to 540 in test.org>)) (((545 557) . #<overlay from 545 to 557 in test.org>) ((609 618) . #<overlay from 609 to 618 in test.org>) ((237 249) . #<overlay from 237 to 249 in test.org>) ((531 540) . #<overlay from 531 to 540 in test.org>)))
 
 
 Lorem ipsum dolor sit amet, consectetur adipiscing elit.

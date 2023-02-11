@@ -12,10 +12,14 @@
   :prefix "org-tidy-"
   :group 'convenience)
 
-(defcustom org-tidy-properties t
+(defcustom org-tidy-properties 'name
   "If non-nil, add text properties to the region markers."
-  :type 'boolean
-  :group 'org-tidy)
+  :group 'org-tidy
+  :type '(choice
+          (const :tag "Only name" name)
+          (const :tag "Abbreviated path" abbreviate)
+          (const :tag "Full path" full)
+          ))
 
 (defcustom org-tidy-src-block t
   "If non-nil, add text properties to the region markers."
@@ -36,30 +40,37 @@
                    '(left-fringe flycheck-fringe-bitmap-double-arrow))
       (push (cons (list beg end) new-overlay) org-tidy-overlays))))
 
-(defun org-tidy-src-overlay (beg end)
+(defun org-tidy-overlay-end-src (beg end)
   "Hides a region by making an invisible overlay over it."
   (interactive)
   (unless (assoc (list beg end) org-tidy-overlays)
     (let ((new-overlay (make-overlay beg end)))
       (overlay-put new-overlay 'invisible t)
-      ;; (overlay-put new-overlay 'intangible t)
-      ;; (overlay-put new-overlay 'before-string "src")
-      (overlay-put new-overlay 'display "src\n")
-      ;; add underline
-      ;; remove background
-      ;; add language name
-      ;; hide end_src
-      ;; end_src overline
+      (overlay-put new-overlay 'display "☰")
+      (push (cons (list beg end) new-overlay) org-tidy-overlays))))
+
+(defun org-tidy-overlay-begin-src (beg end)
+  "Hides a region by making an invisible overlay over it."
+  (interactive)
+  (unless (assoc (list beg end) org-tidy-overlays)
+    (let ((new-overlay (make-overlay beg end)))
+      (overlay-put new-overlay 'invisible t)
+      (overlay-put new-overlay 'display "☰")
       (push (cons (list beg end) new-overlay) org-tidy-overlays))))
 
 (defun org-tidy-src-single (src)
   (let* ((pl (cadr src))
          (begin (plist-get pl :begin))
-         (end (progn
+         (end-src-beg (progn
                 (goto-char begin)
                 (goto-char (line-end-position))
-                (point))))
-    begin end))
+                (forward-char)
+                (+ (length (plist-get pl :value)) (point))))
+         (end (progn (goto-char end-src-beg)
+                     (goto-char (line-end-position))
+                     (point)))
+         )
+    (list :begin begin :end-src-beg end-src-beg :end end)))
 
 (defun org-tidy-src ()
   "Tidy source blocks."
@@ -67,9 +78,14 @@
   (save-excursion
     (let* ((res (org-element-map (org-element-parse-buffer)
                     'src-block #'org-tidy-src-single)))
-      ;; (mapcar (lambda (beg) (org-tidy-src-overlay beg (+ 11 beg)))
-      ;;         begin-list)
-      res
+      (mapcar (lambda (item)
+                (let* ((end-src-beg (plist-get item :end-src-beg))
+                       (end (plist-get item :end))
+                       (begin (plist-get item :begin)))
+                  (org-tidy-overlay-end-src end-src-beg end)
+                  (org-tidy-overlay-begin-src begin (+ 11 begin))))
+              res)
+      ;; res
       )))
 
 (defun org-untidy ()
