@@ -27,12 +27,6 @@ s
 (org-tidy-src)
 #+end_src
 
-#+RESULTS:
-((((237 248) . #<overlay from 237 to 248 in test.org>) ((531 540) . #<overlay from 531 to 540 in test.org>)) (((545 556) . #<overlay from 545 to 556 in test.org>) ((609 618) . #<overlay from 609 to 618 in test.org>) ((237 248) . #<overlay from 237 to 248 in test.org>) ((531 540) . #<overlay from 531 to 540 in test.org>)))
-((((237 248) . #<overlay from 237 to 248 in test.org>) ((531 540) . #<overlay from 531 to 540 in test.org>)) (((545 556) . #<overlay from 545 to 556 in test.org>) ((609 618) . #<overlay from 609 to 618 in test.org>) ((237 248) . #<overlay from 237 to 248 in test.org>) ((531 540) . #<overlay from 531 to 540 in test.org>)))
-((((237 249) . #<overlay from 237 to 249 in test.org>) ((531 540) . #<overlay from 531 to 540 in test.org>)) (((545 557) . #<overlay from 545 to 557 in test.org>) ((609 618) . #<overlay from 609 to 618 in test.org>) ((237 249) . #<overlay from 237 to 249 in test.org>) ((531 540) . #<overlay from 531 to 540 in test.org>)))
-
-
 Lorem ipsum dolor sit amet, consectetur adipiscing elit.
 
 Maecenas vel arcu tempor, luctus mauris nec, aliquet est. Aliquam tincidunt magna nisi. In eget tempor ligula. Suspendisse interdum justo velit, in rutrum magna porttitor pellentesque. Sed tempus blandit magna, sed iaculis neque. Donec est mi, placerat quis tincidunt ac, vulputate ac libero. Maecenas vitae felis accumsan, varius nibh ac, volutpat leo. Etiam a nibh fermentum magna tempor pellentesque ac non orci.
