@@ -8,7 +8,6 @@
 :ID:       8335CF4B-A5ED-4E10-8E3A-3A2A48E2AB76
 :END:
 
-
 #+begin_src emacs-lisp
 (defun org-tidy ()
   "Tidy."
@@ -39,9 +38,9 @@ s
 #+end_src
 
 #+begin_src emacs-lisp
-(put-text-property 169 235 'display "♯")
+(put-text-property 2181 2247 'read-only t)
 (put-text-property 169 235 'org-tidied t)
-(remove-text-properties 169 250 '(display ""))
+(remove-text-properties 2181 2247 '(read-only t))
 (get-text-property 171 'org-tidied)
 (next-single-property-change 169 'org-tidied)
 (text-properties-at 158)
@@ -51,11 +50,10 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit.
 
 Maecenas vel arcu tempor, luctus mauris nec, aliquet est. Aliquam tincidunt magna nisi. In eget tempor ligula. Suspendisse interdum justo velit, in rutrum magna porttitor pellentesque. Sed tempus blandit magna, sed iaculis neque. Donec est mi, placerat quis tincidunt ac, vulputate ac libero. Maecenas vitae felis accumsan, varius nibh ac, volutpat leo. Etiam a nibh fermentum magna tempor pellentesque ac non orci.
 
-** This is heading 1.1.s
+** This is heading 1.1
 :PROPERTIES:
 :ID:       FD92060B-272D-4E6B-852B-303FAD053C0B
 :END:
-
 Maecenas vel arcu tempor, luctus mauris nec, aliquet est. Aliquam tincidunt magna nisi. In eget tempor ligula. Suspendisse interdum justo velit, in rutrum magna porttitor pellentesque. Sed tempus blandit magna, sed iaculis neque. Donec est mi, placerat quis tincidunt ac, vulputate ac libero. Maecenas vitae felis accumsan, varius nibh ac, volutpat leo. Etiam a nibh fermentum magna tempor pellentesque ac non orci.
 
 *** This is heading 1.2.1

@@ -40,7 +40,7 @@
   'org-tidy-fringe-bitmap-sharp
   [#b00010010
    #b00010010
-   #b11111111
+   #b01111111
    #b00100100
    #b00100100
    #b11111110
@@ -54,7 +54,7 @@
     (let* ((ov nil))
       (pcase org-tidy-properties-style
         ('inline
-          (let* ((real-beg (- beg 1)) (real-end (- end 1))
+          (let* ((real-beg (1- beg)) (real-end (1- end))
                  (new-overlay (make-overlay real-beg real-end nil t nil)))
             (overlay-put new-overlay 'display " ♯")
             (overlay-put new-overlay 'invisible t)
@@ -62,9 +62,8 @@
 
         ('fringe
          (let* ((real-beg (1- beg)) (real-end (1- end))
-                (new-overlay (make-overlay real-beg real-end)))
-           (overlay-put new-overlay 'display
-                        '(left-fringe org-tidy-fringe-bitmap-sharp))
+                (new-overlay (make-overlay real-beg real-end nil t nil)))
+           (overlay-put new-overlay 'display '(left-fringe org-tidy-fringe-bitmap-sharp))
            (overlay-put new-overlay 'invisible t)
            (setf ov new-overlay))))
 
