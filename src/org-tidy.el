@@ -40,20 +40,30 @@
   "Hides a region by making an invisible overlay over it."
   (interactive)
   (unless (assoc (list beg end) org-tidy-overlays)
-    (let ((new-overlay (make-overlay beg end)))
-      (overlay-put new-overlay 'invisible t)
-      (overlay-put new-overlay 'display "♯")
-      ;; (overlay-put new-overlay 'display
-      ;;              '(left-fringe flycheck-fringe-bitmap-double-arrow))
-      (push (cons (list beg end) new-overlay) org-tidy-overlays))))
+    (let* ((ov nil))
+      (pcase org-tidy-properties-style
+        ('inline
+          (let* ((real-beg (- beg 1)) (real-end (- end 1))
+                 (new-overlay (make-overlay real-beg real-end nil t nil)))
+            (overlay-put new-overlay 'display " ♯")
+            (overlay-put new-overlay 'invisible t)
+            (setf ov new-overlay)))
+
+        ('fringe
+         (let* ((real-beg (- beg 1)) (real-end (- end 1))
+                (new-overlay (make-overlay real-beg real-end nil t nil)))
+           (overlay-put new-overlay 'display
+                        '(left-fringe flycheck-fringe-bitmap-double-arrow))
+           (overlay-put new-overlay 'invisible t)
+           (setf ov new-overlay))))
+
+      (push (cons (list beg end) ov) org-tidy-overlays))))
 
 
 (defun org-tidy-properties-single (element)
   (-let* (((type props content) element)
           ((&plist :begin begin :end end) props))
-    (org-tidy-overlay-properties
-     (- begin 1)
-     (- end 1))))
+    (org-tidy-overlay-properties begin end)))
 
 (defun org-tidy-properties ()
   "Tidy drawers."

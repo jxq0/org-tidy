@@ -34,9 +34,9 @@
 
 s
 
-#+begin_src emacs-lisp :results raw
+#+begin_src emacs-lisp :results silent
 (org-untidy)
-(org-tidy-src)
+(org-tidy-properties)
 #+end_src
 
 #+begin_src emacs-lisp
@@ -57,7 +57,19 @@ s
 (text-properties-at 158)
 #+end_src
 
-wer
-fwerLorem ipsum dolor sit amet, consectetur adipiscing elit.
+Lorem ipsum dolor sit amet, consectetur adipiscing elit.
 
 Maecenas vel arcu tempor, luctus mauris nec, aliquet est. Aliquam tincidunt magna nisi. In eget tempor ligula. Suspendisse interdum justo velit, in rutrum magna porttitor pellentesque. Sed tempus blandit magna, sed iaculis neque. Donec est mi, placerat quis tincidunt ac, vulputate ac libero. Maecenas vitae felis accumsan, varius nibh ac, volutpat leo. Etiam a nibh fermentum magna tempor pellentesque ac non orci.
+
+** This is heading 1.1.s
+:PROPERTIES:
+:ID:       FD92060B-272D-4E6B-852B-303FAD053C0B
+:END:
+
+Maecenas vel arcu tempor, luctus mauris nec, aliquet est. Aliquam tincidunt magna nisi. In eget tempor ligula. Suspendisse interdum justo velit, in rutrum magna porttitor pellentesque. Sed tempus blandit magna, sed iaculis neque. Donec est mi, placerat quis tincidunt ac, vulputate ac libero. Maecenas vitae felis accumsan, varius nibh ac, volutpat leo. Etiam a nibh fermentum magna tempor pellentesque ac non orci.
+
+*** This is heading 1.2.1
+:PROPERTIES:
+:ID:       22D3A40A-9ADB-4B1E-A7E3-464A638458ED
+:END:
+ser
