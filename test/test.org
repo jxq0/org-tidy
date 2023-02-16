@@ -9,7 +9,6 @@
 :END:
 
 
-
 #+begin_src emacs-lisp
 (defun org-tidy ()
   "Tidy."
@@ -41,17 +40,8 @@ s
 
 #+begin_src emacs-lisp
 (put-text-property 169 235 'display "♯")
-#+end_src
-
-#+begin_src emacs-lisp
 (put-text-property 169 235 'org-tidied t)
-#+end_src
-
-#+begin_src emacs-lisp
 (remove-text-properties 169 250 '(display ""))
-#+end_src
-
-#+begin_src emacs-lisp
 (get-text-property 171 'org-tidied)
 (next-single-property-change 169 'org-tidied)
 (text-properties-at 158)

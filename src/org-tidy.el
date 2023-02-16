@@ -36,6 +36,17 @@
 (defvar-local org-tidy-overlays-properties nil
   "Variable to store the regions we put an overlay on.")
 
+(define-fringe-bitmap
+  'org-tidy-fringe-bitmap-sharp
+  [#b00010010
+   #b00010010
+   #b11111111
+   #b00100100
+   #b00100100
+   #b11111110
+   #b01001000
+   #b01001000])
+
 (defun org-tidy-overlay-properties (beg end)
   "Hides a region by making an invisible overlay over it."
   (interactive)
@@ -50,10 +61,10 @@
             (setf ov new-overlay)))
 
         ('fringe
-         (let* ((real-beg (- beg 1)) (real-end (- end 1))
-                (new-overlay (make-overlay real-beg real-end nil t nil)))
+         (let* ((real-beg (1- beg)) (real-end (1- end))
+                (new-overlay (make-overlay real-beg real-end)))
            (overlay-put new-overlay 'display
-                        '(left-fringe flycheck-fringe-bitmap-double-arrow))
+                        '(left-fringe org-tidy-fringe-bitmap-sharp))
            (overlay-put new-overlay 'invisible t)
            (setf ov new-overlay))))
 
@@ -63,6 +74,7 @@
 (defun org-tidy-properties-single (element)
   (-let* (((type props content) element)
           ((&plist :begin begin :end end) props))
+    (message "beg:%s end:%s" begin end)
     (org-tidy-overlay-properties begin end)))
 
 (defun org-tidy-properties ()
