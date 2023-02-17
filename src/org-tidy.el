@@ -31,7 +31,9 @@
   :group 'org-tidy)
 
 (defvar-local org-tidy-overlays nil
-  "Variable to store the regions we put an overlay on.")
+  "Variable to store the regions we put an overlay on.
+:property-beg-offset is begin of property minus begin of overlay.
+:property-end-offset is end of property minus end of overlay.")
 
 (defvar-local org-tidy-overlays-properties nil
   "Variable to store the regions we put an overlay on.")
@@ -63,11 +65,18 @@
         ('fringe
          (let* ((real-beg (1- beg)) (real-end (1- end))
                 (new-overlay (make-overlay real-beg real-end nil t nil)))
-           (overlay-put new-overlay 'display '(left-fringe org-tidy-fringe-bitmap-sharp))
-           (overlay-put new-overlay 'invisible t)
+           (overlay-put new-overlay 'display
+                        '(left-fringe org-tidy-fringe-bitmap-sharp org-drawer))
+           (put-text-property beg end 'read-only t)
            (setf ov new-overlay))))
 
-      (push (cons (list beg end) ov) org-tidy-overlays))))
+      (push (list :type 'property
+                  :property-beg-offset 1
+                  :property-end-offset -1
+                  :beg beg
+                  :end end
+                  :ov ov)
+            org-tidy-overlays))))
 
 
 (defun org-tidy-properties-single (element)
@@ -138,10 +147,17 @@
   "Untidy."
   (interactive)
   (while org-tidy-overlays
-    (let* ((ov (cdar org-tidy-overlays)))
-      (message "ov:%s" ov)
+    (-let* ((item (pop org-tidy-overlays))
+            ((&plist :ov ov :type type
+                     :property-beg-offset property-beg-offset
+                     :property-end-offset property-end-offset)
+             item))
+      (if (eq type 'property)
+          (let* ((beg (+ property-beg-offset (overlay-start ov)))
+                 (end (+ property-end-offset (overlay-end ov))))
+            (message "beg: %d, end:%d" beg end)))
       (delete-overlay ov)
-      (setf org-tidy-overlays (cdr org-tidy-overlays)))))
+      )))
 
 (defun org-tidy ()
   "Tidy."

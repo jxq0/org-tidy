@@ -18,16 +18,6 @@
         (let* ((beg (match-beginning 0))
                (end (1+ (match-end 0))))
           (org-tidy-hide beg end)))))
-
-(defun org-tidy ()
-  "Tidy."
-  (interactive)
-  (save-excursion
-    (goto-char (point-min))
-    (while (re-search-forward org-property-drawer-re nil t)
-        (let* ((beg (match-beginning 0))
-               (end (1+ (match-end 0))))
-          (org-tidy-hide beg end)))))
 #+end_src
 
 s
@@ -37,20 +27,16 @@ s
 (org-tidy-properties)
 #+end_src
 
+
 #+begin_src emacs-lisp
-(put-text-property 2181 2247 'read-only t)
-(put-text-property 169 235 'org-tidied t)
-(remove-text-properties 2181 2247 '(read-only t))
-(get-text-property 171 'org-tidied)
-(next-single-property-change 169 'org-tidied)
-(text-properties-at 158)
+(setq org-tidy-properties-style 'fringe)
 #+end_src
 
 Lorem ipsum dolor sit amet, consectetur adipiscing elit.
 
 Maecenas vel arcu tempor, luctus mauris nec, aliquet est. Aliquam tincidunt magna nisi. In eget tempor ligula. Suspendisse interdum justo velit, in rutrum magna porttitor pellentesque. Sed tempus blandit magna, sed iaculis neque. Donec est mi, placerat quis tincidunt ac, vulputate ac libero. Maecenas vitae felis accumsan, varius nibh ac, volutpat leo. Etiam a nibh fermentum magna tempor pellentesque ac non orci.
 
-** This is heading 1.1
+** This is heading 1.1d
 :PROPERTIES:
 :ID:       FD92060B-272D-4E6B-852B-303FAD053C0B
 :END:
@@ -60,4 +46,16 @@ Maecenas vel arcu tempor, luctus mauris nec, aliquet est. Aliquam tincidunt magn
 :PROPERTIES:
 :ID:       22D3A40A-9ADB-4B1E-A7E3-464A638458ED
 :END:
-ser
+#+begin_src emacs-lisp
+(defface read-only-face
+  '((t (:inherit region)))
+  "Face for the before string.")
+
+(put-text-property 1986 2052 'read-only t)
+
+(put-text-property 169 235 'org-tidied t)
+(remove-text-properties 2181 2247 '(read-only t))
+(get-text-property 171 'org-tidied)
+(next-single-property-change 169 'org-tidied)
+(text-properties-at 158)
+#+end_src
