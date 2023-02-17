@@ -25,6 +25,15 @@
 (defvar-local org-tidy-properties-symbol "♯"
   "Variable to store the regions we put an overlay on.")
 
+(defvar org-tidy-properties-backspace-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "<backspace>")
+      (lambda ()
+        (interactive)
+        (message "backspace")))
+    map)
+  "keymap for property drawers")
+
 (defcustom org-tidy-src-block t
   "If non-nil, add text properties to the region markers."
   :type 'boolean
@@ -49,6 +58,15 @@
    #b01001000
    #b01001000])
 
+(defun org-tidy-overlay-properties-test (beg end)
+  "Hides a region by making an invisible overlay over it."
+  (interactive)
+  (let* ((pl (list :ovly-beg (1- beg)
+                   :ovly-end (1- end)
+                   :backspace-beg (1- end)
+                   :backspace-end end)))
+    (message "%s" pl)))
+
 (defun org-tidy-overlay-properties (beg end)
   "Hides a region by making an invisible overlay over it."
   (interactive)
@@ -57,6 +75,8 @@
          (ovly-end (1- end))
          (read-only-begin (max 1 ovly-beg))
          (read-only-end end)
+         (backspace-beg (1- end))
+         (backspace-end end)
          (ovly (make-overlay ovly-beg ovly-end nil t nil)))
     (pcase org-tidy-properties-style
       ('inline
@@ -66,19 +86,21 @@
       ('fringe
        (overlay-put ovly 'display
                     '(left-fringe org-tidy-fringe-bitmap-sharp org-drawer))
-       (put-text-property read-only-begin read-only-end
-                          'read-only t)))
+
+       (message "backspace-beg:%d backspace-end:%d"
+                backspace-beg backspace-end)
+
+       (put-text-property backspace-beg backspace-end
+                          'keymap org-tidy-properties-backspace-map)
+       ))
 
     (push (list :type 'property
-                :read-only-beg-offset 1
-                :read-only-end-offset 1
                 :ov ovly)
           org-tidy-overlays)))
 
 (defun org-tidy-properties-single (element)
   (-let* (((type props content) element)
           ((&plist :begin begin :end end) props))
-    (message "beg:%s end:%s" begin end)
     (org-tidy-overlay-properties begin end)))
 
 (defun org-tidy-properties ()
@@ -144,14 +166,7 @@
   (interactive)
   (while org-tidy-overlays
     (-let* ((item (pop org-tidy-overlays))
-            ((&plist :ov ov :type type
-                     :property-beg-offset property-beg-offset
-                     :property-end-offset property-end-offset)
-             item))
-      (if (eq type 'property)
-          (let* ((beg (+ property-beg-offset (overlay-start ov)))
-                 (end (+ property-end-offset (overlay-end ov))))
-            (message "beg: %d, end:%d" beg end)))
+            ((&plist :ov ov :type type) item))
       (delete-overlay ov)
       )))
 
