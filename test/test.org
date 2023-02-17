@@ -58,7 +58,7 @@ wer
   "Face for the before string.")
 
 (put-text-property 1986 2052 'read-only t)
-(put-text-property 205 206 'font-lock-face 'region nil)
+(put-text-property 1687 1688 'font-lock-face 'region nil)
 (put-text-property 169 235 'org-tidied t)
 (remove-text-properties 1 (point-max) '(read-only nil))
 (get-text-property 171 'org-tidied)
@@ -67,8 +67,17 @@ wer
 (text-properties-at 1687)
 
 (put-text-property 1687 1689 'keymap org-tidy-properties-backspace-map nil)
+(put-text-property 1687 1689 'local-map org-tidy-properties-backspace-map nil)
+(put-text-property 1687 1689 'display "x" nil)
+(put-text-property 1687 1689 'help-echo "wer" nil)
+(put-text-property 1687 1689 'intangible t nil)
+
+(text-properties-at 1793)
+(put-text-property 1793 1794 'keymap org-tidy-properties-backspace-map nil)
 
 (org-unfontify-region 1687 1689)
+
+(add-to-list 'font-lock-extra-managed-props 'keymap)
 
 (add-text-properties 1269 1270 '(keymap org-tidy-properties-backspace-map))
 (put-text-property 1269 1270 'org-tidied t)

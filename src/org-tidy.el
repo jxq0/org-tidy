@@ -87,15 +87,13 @@
        (overlay-put ovly 'display
                     '(left-fringe org-tidy-fringe-bitmap-sharp org-drawer))
 
-       (message "backspace-beg:%d backspace-end:%d"
-                backspace-beg backspace-end)
-
        (put-text-property backspace-beg backspace-end
-                          'keymap org-tidy-properties-backspace-map)
+                          'local-map org-tidy-properties-backspace-map)
        ))
-
     (push (list :type 'property
-                :ov ovly)
+                :ov ovly
+                :backspace-beg-offset (- ovly-end backspace-beg)
+                :backspace-end-offset (- ovly-end backspace-end))
           org-tidy-overlays)))
 
 (defun org-tidy-properties-single (element)
@@ -166,8 +164,15 @@
   (interactive)
   (while org-tidy-overlays
     (-let* ((item (pop org-tidy-overlays))
-            ((&plist :ov ov :type type) item))
+            ((&plist :ov ov
+                     :type type
+                     :backspace-beg-offset backspace-beg-offset
+                     :backspace-end-offset backspace-end-offset)
+             item)
+            (backspace-beg (- (overlay-end ov) backspace-beg-offset))
+            (backspace-end (- (overlay-end ov) backspace-end-offset)))
       (delete-overlay ov)
+      (remove-text-properties backspace-beg backspace-end '(local-map nil))
       )))
 
 (defun org-tidy ()
