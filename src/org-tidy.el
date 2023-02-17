@@ -52,32 +52,28 @@
 (defun org-tidy-overlay-properties (beg end)
   "Hides a region by making an invisible overlay over it."
   (interactive)
-  (unless (assoc (list beg end) org-tidy-overlays)
-    (let* ((ov nil))
-      (pcase org-tidy-properties-style
-        ('inline
-          (let* ((real-beg (1- beg)) (real-end (1- end))
-                 (new-overlay (make-overlay real-beg real-end nil t nil)))
-            (overlay-put new-overlay 'display " ♯")
-            (overlay-put new-overlay 'invisible t)
-            (setf ov new-overlay)))
+  (let* ((ov nil)
+         (ovly-beg (1- beg))
+         (ovly-end (1- end))
+         (read-only-begin (max 1 ovly-beg))
+         (read-only-end end)
+         (ovly (make-overlay ovly-beg ovly-end nil t nil)))
+    (pcase org-tidy-properties-style
+      ('inline
+        (overlay-put ovly 'display " ♯")
+        (overlay-put ovly 'invisible t))
 
-        ('fringe
-         (let* ((real-beg (1- beg)) (real-end (1- end))
-                (new-overlay (make-overlay real-beg real-end nil t nil)))
-           (overlay-put new-overlay 'display
-                        '(left-fringe org-tidy-fringe-bitmap-sharp org-drawer))
-           (put-text-property beg end 'read-only t)
-           (setf ov new-overlay))))
+      ('fringe
+       (overlay-put ovly 'display
+                    '(left-fringe org-tidy-fringe-bitmap-sharp org-drawer))
+       (put-text-property read-only-begin read-only-end
+                          'read-only t)))
 
-      (push (list :type 'property
-                  :property-beg-offset 1
-                  :property-end-offset -1
-                  :beg beg
-                  :end end
-                  :ov ov)
-            org-tidy-overlays))))
-
+    (push (list :type 'property
+                :read-only-beg-offset 1
+                :read-only-end-offset 1
+                :ov ovly)
+          org-tidy-overlays)))
 
 (defun org-tidy-properties-single (element)
   (-let* (((type props content) element)
