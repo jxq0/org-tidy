@@ -34,6 +34,19 @@
     map)
   "keymap for property drawers")
 
+(defvar org-tidy-properties-delete-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-d")
+      (lambda ()
+        (interactive)
+        (message "delete")))
+    (define-key map (kbd "<deletechar>")
+      (lambda ()
+        (interactive)
+        (message "delete")))
+    map)
+  "keymap for property drawers")
+
 (defcustom org-tidy-src-block t
   "If non-nil, add text properties to the region markers."
   :type 'boolean
