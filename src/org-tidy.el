@@ -132,54 +132,7 @@
     (org-element-map (org-element-parse-buffer)
                     'property-drawer #'org-tidy-properties-single)))
 
-(defun org-tidy-overlay-end-src (beg end)
-  "Hides a region by making an invisible overlay over it."
-  (interactive)
-  (unless (assoc (list beg end) org-tidy-overlays)
-    (let ((new-overlay (make-overlay beg end)))
-      (overlay-put new-overlay 'invisible t)
-      (overlay-put new-overlay 'display "☰")
-      (push (cons (list beg end) new-overlay) org-tidy-overlays))))
-
-(defun org-tidy-overlay-begin-src (beg end)
-  "Hides a region by making an invisible overlay over it."
-  (interactive)
-  (unless (assoc (list beg end) org-tidy-overlays)
-    (let ((new-overlay (make-overlay beg end)))
-      (overlay-put new-overlay 'invisible t)
-      (overlay-put new-overlay 'display "☰")
-      (push (cons (list beg end) new-overlay) org-tidy-overlays))))
-
-(defun org-tidy-src-single (src)
-  (let* ((pl (cadr src))
-         (begin (plist-get pl :begin))
-         (end-src-beg (progn
-                        (goto-char begin)
-                        (goto-char (line-end-position))
-                        (forward-char)
-                        (+ (length (plist-get pl :value)) (point))))
-         (end (progn (goto-char end-src-beg)
-                     (goto-char (line-end-position))
-                     (point)))
-         )
-    (list :begin begin :end-src-beg end-src-beg :end end)))
-
-(defun org-tidy-src ()
-  "Tidy source blocks."
-  (interactive)
-  (save-excursion
-    (let* ((res (org-element-map (org-element-parse-buffer)
-                    'src-block #'org-tidy-src-single)))
-      (mapcar (lambda (item)
-                (let* ((end-src-beg (plist-get item :end-src-beg))
-                       (end (plist-get item :end))
-                       (begin (plist-get item :begin)))
-                  (org-tidy-overlay-end-src end-src-beg end)
-                  (org-tidy-overlay-begin-src begin (+ 11 begin))))
-              res)
-      )))
-
-(defun org-tidy-src-single-2 (src-block)
+(defun org-tidy-src-single (src-block)
   (-let* (((type props content) src-block)
           ((&plist :begin beg :end end :value value) props)
 
@@ -206,12 +159,12 @@
     (push (list :type 'end-src :ov ovly-end-src)
           org-tidy-overlays)))
 
-(defun org-tidy-src-2 ()
+(defun org-tidy-src ()
   "Tidy source blocks."
   (interactive)
   (save-excursion
     (org-element-map (org-element-parse-buffer)
-        'src-block #'org-tidy-src-single-2)))
+        'src-block #'org-tidy-src-single)))
 
 (defun org-untidy ()
   "Untidy."

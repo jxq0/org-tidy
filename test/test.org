@@ -25,7 +25,7 @@ s
 #+begin_src emacs-lisp :results silent
 (org-untidy)
 (org-tidy-properties)
-(org-tidy-src-2)
+(org-tidy-src)
 #+end_src
 
 
