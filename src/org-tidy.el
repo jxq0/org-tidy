@@ -22,8 +22,22 @@
           (const :tag "Only show inline symbol" inline)
           (const :tag "Show nothing" nothing)))
 
-(defvar-local org-tidy-properties-symbol "♯"
-  "Variable to store the regions we put an overlay on.")
+(defcustom org-tidy-properties-inline-symbol "♯"
+  "docstring"
+  :type 'string)
+
+(defcustom org-tidy-src-block t
+  "If non-nil, add text properties to the region markers."
+  :type 'boolean
+  :group 'org-tidy)
+
+(defcustom org-tidy-begin-src-symbol "☰"
+  "docstring"
+  :type 'string)
+
+(defcustom org-tidy-end-src-symbol "☰"
+  "docstring"
+  :type 'string)
 
 (defun org-tidy-protected-text-edit ()
   (interactive)
@@ -41,11 +55,6 @@
     (define-key map (kbd "<deletechar>") #'org-tidy-protected-text-edit)
     map)
   "keymap for property drawers")
-
-(defcustom org-tidy-src-block t
-  "If non-nil, add text properties to the region markers."
-  :type 'boolean
-  :group 'org-tidy)
 
 (defvar-local org-tidy-overlays nil
   "Variable to store the regions we put an overlay on.
@@ -80,8 +89,7 @@
 (defun org-tidy-overlay-properties (beg end)
   "Hides a region by making an invisible overlay over it."
   (interactive)
-  (let* ((ov nil)
-         (ovly-beg (1- beg))
+  (let* ((ovly-beg (1- beg))
          (ovly-end (1- end))
          (read-only-begin (max 1 ovly-beg))
          (read-only-end end)
@@ -90,21 +98,20 @@
          (del-beg (max 1 (1- beg)))
          (del-end (1+ del-beg))
          (ovly (make-overlay ovly-beg ovly-end nil t nil)))
+
     (pcase org-tidy-properties-style
       ('inline
-        (overlay-put ovly 'display " ♯")
-        (overlay-put ovly 'invisible t))
-
+        (overlay-put ovly 'display
+                     (format " %s" org-tidy-properties-inline-symbol)))
       ('fringe
        (overlay-put ovly 'display
-                    '(left-fringe org-tidy-fringe-bitmap-sharp org-drawer))
+                    '(left-fringe org-tidy-fringe-bitmap-sharp org-drawer))))
 
-       (put-text-property backspace-beg backspace-end
-                          'local-map org-tidy-properties-backspace-map)
+    (put-text-property backspace-beg backspace-end
+                       'local-map org-tidy-properties-backspace-map)
+    (put-text-property del-beg del-end
+                       'local-map org-tidy-properties-delete-map)
 
-       (put-text-property del-beg del-end
-                          'local-map org-tidy-properties-delete-map)
-       ))
     (push (list :type 'property
                 :ov ovly
                 :backspace-beg-offset (- ovly-end backspace-beg)
@@ -122,10 +129,8 @@
   "Tidy drawers."
   (interactive)
   (save-excursion
-    (let* ((res (org-element-map (org-element-parse-buffer)
+    (org-element-map (org-element-parse-buffer)
                     'property-drawer #'org-tidy-properties-single)))
-      res
-      )))
 
 (defun org-tidy-overlay-end-src (beg end)
   "Hides a region by making an invisible overlay over it."
@@ -159,8 +164,6 @@
          )
     (list :begin begin :end-src-beg end-src-beg :end end)))
 
-
-
 (defun org-tidy-src ()
   "Tidy source blocks."
   (interactive)
@@ -175,6 +178,40 @@
                   (org-tidy-overlay-begin-src begin (+ 11 begin))))
               res)
       )))
+
+(defun org-tidy-src-single-2 (src-block)
+  (-let* (((type props content) src-block)
+          ((&plist :begin beg :end end :value value) props)
+
+          (ovly-beg-src-beg beg)
+          (ovly-beg-src-end (+ 11 beg))
+          (ovly-beg-src (make-overlay ovly-beg-src-beg ovly-beg-src-end nil t nil))
+
+          (ovly-end-src-beg (progn
+                              (goto-char beg)
+                              (goto-char (line-end-position))
+                              (forward-char)
+                              (+ (length value) (point))))
+          (ovly-end-src-end (progn
+                              (goto-char ovly-end-src-beg)
+                              (goto-char (line-end-position))
+                              (point)))
+          (ovly-end-src (make-overlay ovly-end-src-beg ovly-end-src-end nil t nil))
+          )
+    (overlay-put ovly-beg-src 'display org-tidy-begin-src-symbol)
+    (overlay-put ovly-end-src 'display org-tidy-end-src-symbol)
+
+    (push (list :type 'beg-src :ov ovly-beg-src)
+          org-tidy-overlays)
+    (push (list :type 'end-src :ov ovly-end-src)
+          org-tidy-overlays)))
+
+(defun org-tidy-src-2 ()
+  "Tidy source blocks."
+  (interactive)
+  (save-excursion
+    (org-element-map (org-element-parse-buffer)
+        'src-block #'org-tidy-src-single-2)))
 
 (defun org-untidy ()
   "Untidy."
@@ -194,8 +231,7 @@
             (del-end (- (overlay-start ov) del-end-offset)))
       (delete-overlay ov)
       (remove-text-properties backspace-beg backspace-end '(local-map nil))
-      (remove-text-properties del-beg del-end '(local-map nil))
-      )))
+      (remove-text-properties del-beg del-end '(local-map nil)))))
 
 (defun org-tidy ()
   "Tidy."

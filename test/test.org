@@ -25,11 +25,13 @@ s
 #+begin_src emacs-lisp :results silent
 (org-untidy)
 (org-tidy-properties)
+(org-tidy-src-2)
 #+end_src
 
 
 #+begin_src emacs-lisp
 (setq org-tidy-properties-style 'fringe)
+(setq org-tidy-properties-style 'inline)
 #+end_src
 
 Lorem ipsum dolor sit amet, consectetur adipiscing elit.
