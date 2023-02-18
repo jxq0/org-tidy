@@ -25,25 +25,20 @@
 (defvar-local org-tidy-properties-symbol "♯"
   "Variable to store the regions we put an overlay on.")
 
+(defun org-tidy-protected-text-edit ()
+  (interactive)
+  (user-error "Text is protected."))
+
 (defvar org-tidy-properties-backspace-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "<backspace>")
-      (lambda ()
-        (interactive)
-        (message "backspace")))
+    (define-key map (kbd "<backspace>") #'org-tidy-protected-text-edit)
     map)
   "keymap for property drawers")
 
 (defvar org-tidy-properties-delete-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-d")
-      (lambda ()
-        (interactive)
-        (message "delete")))
-    (define-key map (kbd "<deletechar>")
-      (lambda ()
-        (interactive)
-        (message "delete")))
+    (define-key map (kbd "C-d") #'org-tidy-protected-text-edit)
+    (define-key map (kbd "<deletechar>") #'org-tidy-protected-text-edit)
     map)
   "keymap for property drawers")
 
@@ -77,7 +72,9 @@
   (let* ((pl (list :ovly-beg (1- beg)
                    :ovly-end (1- end)
                    :backspace-beg (1- end)
-                   :backspace-end end)))
+                   :backspace-end end
+                   :del-beg (1- beg)
+                   :del-end beg)))
     (message "%s" pl)))
 
 (defun org-tidy-overlay-properties (beg end)
@@ -90,6 +87,8 @@
          (read-only-end end)
          (backspace-beg (1- end))
          (backspace-end end)
+         (del-beg (max 1 (1- beg)))
+         (del-end (1+ del-beg))
          (ovly (make-overlay ovly-beg ovly-end nil t nil)))
     (pcase org-tidy-properties-style
       ('inline
@@ -102,11 +101,16 @@
 
        (put-text-property backspace-beg backspace-end
                           'local-map org-tidy-properties-backspace-map)
+
+       (put-text-property del-beg del-end
+                          'local-map org-tidy-properties-delete-map)
        ))
     (push (list :type 'property
                 :ov ovly
                 :backspace-beg-offset (- ovly-end backspace-beg)
-                :backspace-end-offset (- ovly-end backspace-end))
+                :backspace-end-offset (- ovly-end backspace-end)
+                :del-beg-offset (- ovly-beg del-beg)
+                :del-end-offset (- ovly-beg del-end))
           org-tidy-overlays)))
 
 (defun org-tidy-properties-single (element)
@@ -180,12 +184,17 @@
             ((&plist :ov ov
                      :type type
                      :backspace-beg-offset backspace-beg-offset
-                     :backspace-end-offset backspace-end-offset)
+                     :backspace-end-offset backspace-end-offset
+                     :del-beg-offset del-beg-offset
+                     :del-end-offset del-end-offset)
              item)
             (backspace-beg (- (overlay-end ov) backspace-beg-offset))
-            (backspace-end (- (overlay-end ov) backspace-end-offset)))
+            (backspace-end (- (overlay-end ov) backspace-end-offset))
+            (del-beg (- (overlay-start ov) del-beg-offset))
+            (del-end (- (overlay-start ov) del-end-offset)))
       (delete-overlay ov)
       (remove-text-properties backspace-beg backspace-end '(local-map nil))
+      (remove-text-properties del-beg del-end '(local-map nil))
       )))
 
 (defun org-tidy ()

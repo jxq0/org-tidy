@@ -43,11 +43,6 @@ Maecenas vel arcu tempor, luctus mauris nec, aliquet est. Aliquam tincidunt magn
 
 awerewrs vel arcu tempor, luctus mauris nec, aliquet est. Aliquam tincidunt magna nisi. In eget tempor ligula. Suspendisse interdum justo velit, in rutrum magna porttitor pellentesque. Sed tempus blandit magna, sed iaculis neque. Donec est mi, placerat quis tincidunt ac, vulputate ac libero. Maecenas vitae felis accumsan, varius nibh ac, volutpat leo. Etiam a nibh fermentum magna tempor pellentesque ac non orci.
 
-werf
-e
-wer
-
-
 *** This is heading 1.2.1f
 :PROPERTIES:
 :ID:       22D3A40A-9ADB-4B1E-A7E3-464A638458ED
@@ -72,7 +67,7 @@ wer
 (put-text-property 1687 1689 'help-echo "wer" nil)
 (put-text-property 1687 1689 'intangible t nil)
 
-(text-properties-at 1793)
+(text-properties-at 1)
 (put-text-property 1793 1794 'keymap org-tidy-properties-backspace-map nil)
 
 (org-unfontify-region 1687 1689)
