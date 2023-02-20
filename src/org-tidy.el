@@ -14,6 +14,11 @@
   :prefix "org-tidy-"
   :group 'convenience)
 
+(defcustom org-tidy-properties t
+  "If non-nil, add text properties to the region markers."
+  :type 'boolean
+  :group 'org-tidy)
+
 (defcustom org-tidy-properties-style 'inline
   "If non-nil, add text properties to the region markers."
   :group 'org-tidy
@@ -166,25 +171,34 @@
     (org-element-map (org-element-parse-buffer)
         'src-block #'org-tidy-src-single)))
 
+(defun org-untidy-property (item)
+  (-let* (((&plist :ov ov
+                   :backspace-beg-offset backspace-beg-offset
+                   :backspace-end-offset backspace-end-offset
+                   :del-beg-offset del-beg-offset
+                   :del-end-offset del-end-offset)
+           item)
+          (backspace-beg (- (overlay-end ov) backspace-beg-offset))
+          (backspace-end (- (overlay-end ov) backspace-end-offset))
+          (del-beg (- (overlay-start ov) del-beg-offset))
+          (del-end (- (overlay-start ov) del-end-offset)))
+    (delete-overlay ov)
+    (remove-text-properties backspace-beg backspace-end '(local-map nil))
+    (remove-text-properties del-beg del-end '(local-map nil))))
+
+(defun org-untidy-src (item)
+  (-let* (((&plist :ov ov) item))
+    (delete-overlay ov)))
+
 (defun org-untidy ()
   "Untidy."
   (interactive)
   (while org-tidy-overlays
     (-let* ((item (pop org-tidy-overlays))
-            ((&plist :ov ov
-                     :type type
-                     :backspace-beg-offset backspace-beg-offset
-                     :backspace-end-offset backspace-end-offset
-                     :del-beg-offset del-beg-offset
-                     :del-end-offset del-end-offset)
-             item)
-            (backspace-beg (- (overlay-end ov) backspace-beg-offset))
-            (backspace-end (- (overlay-end ov) backspace-end-offset))
-            (del-beg (- (overlay-start ov) del-beg-offset))
-            (del-end (- (overlay-start ov) del-end-offset)))
-      (delete-overlay ov)
-      (remove-text-properties backspace-beg backspace-end '(local-map nil))
-      (remove-text-properties del-beg del-end '(local-map nil)))))
+            ((&plist :type type) item))
+      (pcase type
+        ('property (org-untidy-property item))
+        (_ (org-untidy-src item))))))
 
 (defun org-tidy ()
   "Tidy."
