@@ -66,9 +66,6 @@
 :property-beg-offset is begin of property minus begin of overlay.
 :property-end-offset is end of property minus end of overlay.")
 
-(defvar-local org-tidy-overlays-properties nil
-  "Variable to store the regions we put an overlay on.")
-
 (define-fringe-bitmap
   'org-tidy-fringe-bitmap-sharp
   [#b00010010
@@ -79,6 +76,16 @@
    #b11111110
    #b01001000
    #b01001000])
+
+(defun org-tidy-overlay-exists (ovly-beg ovly-end)
+  "docstring"
+  (-filter (lambda (item)
+             (let* ((ov (plist-get item :ov))
+                    (old-ovly-beg (overlay-start ov))
+                    (old-ovly-end (overlay-end ov)))
+               (and (= ovly-beg old-ovly-beg)
+                    (= ovly-end old-ovly-end))))
+           org-tidy-overlays))
 
 (defun org-tidy-overlay-properties-test (beg end)
   "Hides a region by making an invisible overlay over it."
@@ -91,18 +98,19 @@
                    :del-end beg)))
     (message "%s" pl)))
 
-(defun org-tidy-overlay-properties (beg end)
-  "Hides a region by making an invisible overlay over it."
-  (interactive)
-  (let* ((ovly-beg (1- beg))
-         (ovly-end (1- end))
-         (read-only-begin (max 1 ovly-beg))
-         (read-only-end end)
-         (backspace-beg (1- end))
-         (backspace-end end)
-         (del-beg (max 1 (1- beg)))
-         (del-end (1+ del-beg))
-         (ovly (make-overlay ovly-beg ovly-end nil t nil)))
+(defun org-tidy-properties-single (element)
+  (-let* (((type props content) element)
+          ((&plist :begin beg :end end) props)
+
+          (ovly-beg (1- beg))
+          (ovly-end (1- end))
+          (read-only-begin (max 1 ovly-beg))
+          (read-only-end end)
+          (backspace-beg (1- end))
+          (backspace-end end)
+          (del-beg (max 1 (1- beg)))
+          (del-end (1+ del-beg))
+          (ovly (make-overlay ovly-beg ovly-end nil t nil)))
 
     (pcase org-tidy-properties-style
       ('inline
@@ -124,11 +132,6 @@
                 :del-beg-offset (- ovly-beg del-beg)
                 :del-end-offset (- ovly-beg del-end))
           org-tidy-overlays)))
-
-(defun org-tidy-properties-single (element)
-  (-let* (((type props content) element)
-          ((&plist :begin begin :end end) props))
-    (org-tidy-overlay-properties begin end)))
 
 (defun org-tidy-properties ()
   "Tidy drawers."
@@ -200,16 +203,18 @@
         ('property (org-untidy-property item))
         (_ (org-untidy-src item))))))
 
-(defun org-tidy ()
-  "Tidy."
-  (interactive)
-  ;; (save-excursion
-  ;;   (goto-char (point-min))
-  ;;   (while (re-search-forward org-property-drawer-re nil t)
-  ;;       (let* ((beg (match-beginning 0))
-  ;;              (end (1+ (match-end 0))))
-  ;;         (org-tidy-hide beg end))))
-  )
+(defun org-tidy-buffer ()
+  "Tidy.")
+
+;;;###autoload
+(define-minor-mode org-tidy-mode
+  "Automatically tidy org mode buffers."
+  :global nil
+  :group 'org-tidy
+  (if org-tidy-mode
+      (progn (org-tidy-buffer)
+             (add-hook 'before-save-hook 'org-tidy-buffer nil t))
+    (remove-hook 'before-save-hook 'org-tidy-buffer t)))
 
 (provide 'org-tidy)
 

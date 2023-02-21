@@ -26,6 +26,9 @@ s
 (org-untidy)
 (org-tidy-properties)
 (org-tidy-src)
+
+(org-tidy-mode -1)
+(org-tidy-mode t)
 #+end_src
 
 
