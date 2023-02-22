@@ -66,16 +66,27 @@
 :property-beg-offset is begin of property minus begin of overlay.
 :property-end-offset is end of property minus end of overlay.")
 
+;; (define-fringe-bitmap
+;;   'org-tidy-fringe-bitmap-sharp
+;;   [#b00010010
+;;    #b00010010
+;;    #b01111111
+;;    #b00100100
+;;    #b00100100
+;;    #b11111110
+;;    #b01001000
+;;    #b01001000])
+
 (define-fringe-bitmap
   'org-tidy-fringe-bitmap-sharp
-  [#b00010010
-   #b00010010
-   #b01111111
+  [#b00100100
+   #b00100100
+   #b11111111
    #b00100100
    #b00100100
-   #b11111110
-   #b01001000
-   #b01001000])
+   #b11111111
+   #b00100100
+   #b00100100])
 
 (defun org-tidy-overlay-exists (ovly-beg ovly-end)
   "docstring"
@@ -101,53 +112,49 @@
 (defun org-tidy-properties-single (element)
   (-let* (((type props content) element)
           ((&plist :begin beg :end end) props)
+          (ovly-beg (max 1 (1- beg)))
+          (ovly-end (1- end)))
+    (unless (org-tidy-overlay-exists ovly-beg ovly-end)
+      (let* ((read-only-begin ovly-beg)
+             (read-only-end end)
+             (backspace-beg (1- end))
+             (backspace-end end)
+             (del-beg (max 1 (1- beg)))
+             (del-end (1+ del-beg))
+             (ovly (make-overlay ovly-beg ovly-end nil t nil)))
+        (pcase org-tidy-properties-style
+          ('inline
+            (overlay-put ovly 'display
+                         (format " %s" org-tidy-properties-inline-symbol)))
+          ('fringe
+           (overlay-put ovly 'display
+                        '(left-fringe org-tidy-fringe-bitmap-sharp org-drawer))))
 
-          (ovly-beg (1- beg))
-          (ovly-end (1- end))
-          (read-only-begin (max 1 ovly-beg))
-          (read-only-end end)
-          (backspace-beg (1- end))
-          (backspace-end end)
-          (del-beg (max 1 (1- beg)))
-          (del-end (1+ del-beg))
-          (ovly (make-overlay ovly-beg ovly-end nil t nil)))
+        (put-text-property backspace-beg backspace-end
+                           'local-map org-tidy-properties-backspace-map)
+        (put-text-property del-beg del-end
+                           'local-map org-tidy-properties-delete-map)
 
-    (pcase org-tidy-properties-style
-      ('inline
-        (overlay-put ovly 'display
-                     (format " %s" org-tidy-properties-inline-symbol)))
-      ('fringe
-       (overlay-put ovly 'display
-                    '(left-fringe org-tidy-fringe-bitmap-sharp org-drawer))))
-
-    (put-text-property backspace-beg backspace-end
-                       'local-map org-tidy-properties-backspace-map)
-    (put-text-property del-beg del-end
-                       'local-map org-tidy-properties-delete-map)
-
-    (push (list :type 'property
-                :ov ovly
-                :backspace-beg-offset (- ovly-end backspace-beg)
-                :backspace-end-offset (- ovly-end backspace-end)
-                :del-beg-offset (- ovly-beg del-beg)
-                :del-end-offset (- ovly-beg del-end))
-          org-tidy-overlays)))
+        (push (list :type 'property
+                    :ov ovly
+                    :backspace-beg-offset (- ovly-end backspace-beg)
+                    :backspace-end-offset (- ovly-end backspace-end)
+                    :del-beg-offset (- ovly-beg del-beg)
+                    :del-end-offset (- ovly-beg del-end))
+              org-tidy-overlays)))))
 
 (defun org-tidy-properties ()
   "Tidy drawers."
   (interactive)
   (save-excursion
     (org-element-map (org-element-parse-buffer)
-                    'property-drawer #'org-tidy-properties-single)))
+        'property-drawer #'org-tidy-properties-single)))
 
 (defun org-tidy-src-single (src-block)
   (-let* (((type props content) src-block)
           ((&plist :begin beg :end end :value value) props)
-
           (ovly-beg-src-beg beg)
           (ovly-beg-src-end (+ 11 beg))
-          (ovly-beg-src (make-overlay ovly-beg-src-beg ovly-beg-src-end nil t nil))
-
           (ovly-end-src-beg (progn
                               (goto-char beg)
                               (goto-char (line-end-position))
@@ -156,16 +163,20 @@
           (ovly-end-src-end (progn
                               (goto-char ovly-end-src-beg)
                               (goto-char (line-end-position))
-                              (point)))
-          (ovly-end-src (make-overlay ovly-end-src-beg ovly-end-src-end nil t nil))
-          )
-    (overlay-put ovly-beg-src 'display org-tidy-begin-src-symbol)
-    (overlay-put ovly-end-src 'display org-tidy-end-src-symbol)
+                              (point))))
+    (unless (or (org-tidy-overlay-exists ovly-beg-src-beg ovly-beg-src-end)
+                (org-tidy-overlay-exists ovly-end-src-beg ovly-end-src-end))
+      (let* ((ovly-beg-src (make-overlay ovly-beg-src-beg
+                                         ovly-beg-src-end nil t nil))
+             (ovly-end-src (make-overlay ovly-end-src-beg
+                                         ovly-end-src-end nil t nil)))
+        (overlay-put ovly-beg-src 'display org-tidy-begin-src-symbol)
+        (overlay-put ovly-end-src 'display org-tidy-end-src-symbol)
 
-    (push (list :type 'beg-src :ov ovly-beg-src)
-          org-tidy-overlays)
-    (push (list :type 'end-src :ov ovly-end-src)
-          org-tidy-overlays)))
+        (push (list :type 'beg-src :ov ovly-beg-src)
+              org-tidy-overlays)
+        (push (list :type 'end-src :ov ovly-end-src)
+              org-tidy-overlays)))))
 
 (defun org-tidy-src ()
   "Tidy source blocks."
@@ -193,7 +204,7 @@
   (-let* (((&plist :ov ov) item))
     (delete-overlay ov)))
 
-(defun org-untidy ()
+(defun org-untidy-buffer ()
   "Untidy."
   (interactive)
   (while org-tidy-overlays
@@ -204,7 +215,10 @@
         (_ (org-untidy-src item))))))
 
 (defun org-tidy-buffer ()
-  "Tidy.")
+  "Tidy."
+  (interactive)
+  (if org-tidy-src-block (org-tidy-src))
+  (if org-tidy-properties (org-tidy-properties)))
 
 ;;;###autoload
 (define-minor-mode org-tidy-mode
@@ -212,9 +226,19 @@
   :global nil
   :group 'org-tidy
   (if org-tidy-mode
-      (progn (org-tidy-buffer)
-             (add-hook 'before-save-hook 'org-tidy-buffer nil t))
-    (remove-hook 'before-save-hook 'org-tidy-buffer t)))
+      (progn
+        (if (eq org-tidy-properties-style 'fringe)
+            (let* ((width 10))
+              (setq left-fringe-width width)
+              (set-window-fringes nil width)))
+        (org-tidy-buffer)
+        (add-hook 'before-save-hook 'org-tidy-buffer nil t))
+    (progn
+      (if (eq org-tidy-properties-style 'fringe)
+          (progn (setq left-fringe-width nil)
+                 (set-window-fringes nil nil)))
+      (org-untidy)
+      (remove-hook 'before-save-hook 'org-tidy-buffer t))))
 
 (provide 'org-tidy)
 

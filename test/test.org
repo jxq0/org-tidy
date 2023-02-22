@@ -23,14 +23,23 @@
 s
 
 #+begin_src emacs-lisp :results silent
-(org-untidy)
+(org-untidy-buffer)
 (org-tidy-properties)
 (org-tidy-src)
+(setq left-fringe-width 16)
+(set-window-fringes nil nil)
 
 (org-tidy-mode -1)
 (org-tidy-mode t)
 #+end_src
 
+#+begin_src emacs-lisp :results file :file output.el
+(org-tidy-properties)
+(pp org-tidy-overlays)
+#+end_src
+
+#+RESULTS:
+[[file:output.el]]
 
 #+begin_src emacs-lisp
 (setq org-tidy-properties-style 'fringe)
@@ -46,7 +55,7 @@ Maecenas vel arcu tempor, luctus mauris nec, aliquet est. Aliquam tincidunt magn
 :ID:       FD92060B-272D-4E6B-852B-303FAD053C0B
 :END:
 
-awerewrs vel arcu tempor, luctus mauris nec, aliquet est. Aliquam tincidunt magna nisi. In eget tempor ligula. Suspendisse interdum justo velit, in rutrum magna porttitor pellentesque. Sed tempus blandit magna, sed iaculis neque. Donec est mi, placerat quis tincidunt ac, vulputate ac libero. Maecenas vitae felis accumsan, varius nibh ac, volutpat leo. Etiam a nibh fermentum magna tempor pellentesque ac non orci.
+awerewrs vel arcu tempor, luctus mauris nec, aliquet est. Aliquam tincidunt magna nisi. In eget tempor ligula. Suspendisse interdum justo velit, in rutrum magna porttitor pellentesque. Sed tempus blandit magna, sed iaculis neque. Donec est mi, placerat quis tincidunt ac, vulputate ac libero. Maecenas vitae felis accumsan, varius nibh ac, volutpat leo. Etiam a nibh fermentum magna tempor pellentesque ac non osrci.
 
 *** This is heading 1.2.1f
 :PROPERTIES:
@@ -81,4 +90,14 @@ awerewrs vel arcu tempor, luctus mauris nec, aliquet est. Aliquam tincidunt magn
 
 (add-text-properties 1269 1270 '(keymap org-tidy-properties-backspace-map))
 (put-text-property 1269 1270 'org-tidied t)
+#+end_src
+
+*** 1.2.2
+:PROPERTIES:
+:ID:       9331B8EC-6DA8-4E4D-836E-7606650C101A
+:END:
+wer
+
+#+begin_src emacs-lisp
+
 #+end_src
