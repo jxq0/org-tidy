@@ -3,6 +3,19 @@
 :END:
 #+title: My Org Notes
 
+#+begin_src emacs-lisp
+(defface org-tidy-top-face
+  '((t (:inherit (org-document-info-keyword))))
+  "Face for the before string.")
+
+(put-text-property 1 68 'display "" nil)
+(put-text-property 1 67 'line-height 0.5 nil)
+(put-text-property 1 67 'display (propertize "♯" 'face 'org-tidy-top-face) nil)
+(remove-text-properties 1 68 '(display nil))
+
+(text-properties-at 1)
+#+end_src
+
 * This is an example headline                                      :tag:tag2:
 :PROPERTIES:
 :ID:       8335CF4B-A5ED-4E10-8E3A-3A2A48E2AB76

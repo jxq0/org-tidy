@@ -27,6 +27,13 @@
           (const :tag "Only show inline symbol" inline)
           (const :tag "Show nothing" nothing)))
 
+(defcustom org-tidy-top-property-style 'hide
+  "If non-nil, add text properties to the region markers."
+  :group 'org-tidy
+  :type '(choice
+          (const :tag "Hide completely" hide)
+          (const :tag "Stay" stay)))
+
 (defcustom org-tidy-properties-inline-symbol "♯"
   "docstring"
   :type 'string)
@@ -237,7 +244,7 @@
       (if (eq org-tidy-properties-style 'fringe)
           (progn (setq left-fringe-width nil)
                  (set-window-fringes nil nil)))
-      (org-untidy)
+      (org-untidy-buffer)
       (remove-hook 'before-save-hook 'org-tidy-buffer t))))
 
 (provide 'org-tidy)
