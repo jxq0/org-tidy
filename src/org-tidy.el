@@ -1,4 +1,4 @@
-;;; org-stealth.el --- A minor mode to clean org-mode.
+;;; org-tidy.el --- A minor mode to tidy org-mode buffers.
 
 ;;; Commentary:
 ;;
@@ -32,7 +32,7 @@
   :group 'org-tidy
   :type '(choice
           (const :tag "Hide completely" hide)
-          (const :tag "Stay" stay)))
+          (const :tag "Keep" keep)))
 
 (defcustom org-tidy-properties-inline-symbol "♯"
   "docstring"
@@ -43,11 +43,11 @@
   :type 'boolean
   :group 'org-tidy)
 
-(defcustom org-tidy-begin-src-symbol "☰"
+(defcustom org-tidy-begin-src-symbol "☶"
   "docstring"
   :type 'string)
 
-(defcustom org-tidy-end-src-symbol "☰"
+(defcustom org-tidy-end-src-symbol "☳"
   "docstring"
   :type 'string)
 
@@ -73,17 +73,6 @@
 :property-beg-offset is begin of property minus begin of overlay.
 :property-end-offset is end of property minus end of overlay.")
 
-;; (define-fringe-bitmap
-;;   'org-tidy-fringe-bitmap-sharp
-;;   [#b00010010
-;;    #b00010010
-;;    #b01111111
-;;    #b00100100
-;;    #b00100100
-;;    #b11111110
-;;    #b01001000
-;;    #b01001000])
-
 (define-fringe-bitmap
   'org-tidy-fringe-bitmap-sharp
   [#b00100100
@@ -96,13 +85,13 @@
    #b00100100])
 
 (defun org-tidy-overlay-exists (ovly-beg ovly-end)
-  "docstring"
+  "Check whether overlay from OVLY-BEG to OVLY-END exists."
   (-filter (lambda (item)
              (let* ((ov (plist-get item :ov))
                     (old-ovly-beg (overlay-start ov))
                     (old-ovly-end (overlay-end ov)))
                (and (= ovly-beg old-ovly-beg)
-                    (= ovly-end old-ovly-end))))
+                    (>= ovly-end old-ovly-end))))
            org-tidy-overlays))
 
 (defun org-tidy-overlay-properties-test (beg end)
@@ -119,8 +108,9 @@
 (defun org-tidy-properties-single (element)
   (-let* (((type props content) element)
           ((&plist :begin beg :end end) props)
-          (ovly-beg (max 1 (1- beg)))
-          (ovly-end (1- end)))
+          (is-top-property (= 1 beg))
+          (ovly-beg (if is-top-property 1 (1- beg)))
+          (ovly-end (if is-top-property end (1- end))))
     (unless (org-tidy-overlay-exists ovly-beg ovly-end)
       (let* ((read-only-begin ovly-beg)
              (read-only-end end)
@@ -128,31 +118,40 @@
              (backspace-end end)
              (del-beg (max 1 (1- beg)))
              (del-end (1+ del-beg))
-             (ovly (make-overlay ovly-beg ovly-end nil t nil)))
-        (pcase org-tidy-properties-style
-          ('inline
-            (overlay-put ovly 'display
-                         (format " %s" org-tidy-properties-inline-symbol)))
-          ('fringe
+             (ovly (make-overlay ovly-beg ovly-end nil t nil))
+             (push-ovly nil))
+        (pcase (list is-top-property
+                     org-tidy-top-property-style
+                     org-tidy-properties-style)
+          (`(t hide ,_)
+           (overlay-put ovly 'display "")
+           (setf push-ovly t))
+          (`(t keep ,_) (delete-overlay ovly))
+          (`(nil ,_ inline)
            (overlay-put ovly 'display
-                        '(left-fringe org-tidy-fringe-bitmap-sharp org-drawer))))
+                        (format " %s" org-tidy-properties-inline-symbol))
+           (setf push-ovly t))
+          (`(nil ,_ fringe)
+           (overlay-put ovly 'display
+                        '(left-fringe org-tidy-fringe-bitmap-sharp org-drawer))
+           (setf push-ovly t)))
 
-        (put-text-property backspace-beg backspace-end
-                           'local-map org-tidy-properties-backspace-map)
-        (put-text-property del-beg del-end
-                           'local-map org-tidy-properties-delete-map)
+        (when push-ovly
+          (put-text-property backspace-beg backspace-end
+                             'local-map org-tidy-properties-backspace-map)
+          (put-text-property del-beg del-end
+                             'local-map org-tidy-properties-delete-map)
 
-        (push (list :type 'property
-                    :ov ovly
-                    :backspace-beg-offset (- ovly-end backspace-beg)
-                    :backspace-end-offset (- ovly-end backspace-end)
-                    :del-beg-offset (- ovly-beg del-beg)
-                    :del-end-offset (- ovly-beg del-end))
-              org-tidy-overlays)))))
+          (push (list :type 'property
+                      :ov ovly
+                      :backspace-beg-offset (- ovly-end backspace-beg)
+                      :backspace-end-offset (- ovly-end backspace-end)
+                      :del-beg-offset (- ovly-beg del-beg)
+                      :del-end-offset (- ovly-beg del-end))
+                org-tidy-overlays))))))
 
 (defun org-tidy-properties ()
   "Tidy drawers."
-  (interactive)
   (save-excursion
     (org-element-map (org-element-parse-buffer)
         'property-drawer #'org-tidy-properties-single)))

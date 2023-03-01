@@ -1,0 +1,4 @@
+#+title: org-tidy - Tidy org-mode buffers
+#+author: Xuqing Jia
+
+Org-mode buffer with a lot of property drawers is really annoying. Even after they are folded, there are still lines like ~:PROPERTIES: ...~ , which makes the whole org-mode buffer hard to read.
