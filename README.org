@@ -8,6 +8,7 @@ Org-mode's property drawer is a very useful feature. We can store properties ass
 
 At first I googled for some tricks to hide property drawers completely. And I found there are many people like me who are bothered by this problem. Of course there are solutions. But these solutions involve a lot of code. So I made this package.
 
-* Feature
+* Screenshots
+[[https://github.com/jxq0/org-tidy/blob/screenshot.png?raw=true]]
 
 * Customize

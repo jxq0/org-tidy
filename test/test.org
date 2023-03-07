@@ -9,36 +9,34 @@
 :ID:       559505B0-D078-4BB3-B8CB-BEFFCAFF87AF
 :END:
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris orci magna, porta non purus ac, ullamcorper lacinia justo. Nullam consequat suscipit auctor. Suspendisse bibendum ex et posuere rutrum. Etiam ut leo congue, commodo lacus et, egestas elit. Donec finibus justo quis tortor tempor gravida. Mauris sollicitudin dolor at tempus sagittis. Fusce sapien enim, convallis imperdiet leo scelerisque, eleifend semper velit. Nullam quis placerat justo. Proin et quam aliquet, cursus est interdum, consectetur eros. Ut id sollicitudin ligula. Quisque fermentum felis turpis.
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris orci magna, porta non purus ac, ullamcorper lacinia justo. Nullam consequat suscipit auctor. Suspendisse bibendum ex et posuere rutrum. Etiam ut leo congue, commodo lacus et, egestas elit. Donec finibus justo quis tortor tempor gravida.
 
 ** Headline 2
 :PROPERTIES:
 :ID:       F9BFD5BB-8BE5-44FA-96D5-ABC83FF8E2FF
 :END:
-Donec interdum massa a ex facilisis malesuada. Donec at erat mi. Curabitur a nulla ut enim commodo scelerisque. In fringilla gravida tortor eget tincidunt. Nunc imperdiet mattis mi. Etiam vel augue quis leo congue dapibus id sit amet nisl. Cras elit nulla, dapibus ut velit sit amet, ornare imperdiet massa. Donec imperdiet faucibus nulla, ut blandit est cursus eu. Ut eget sollicitudin magna. Proin eros tellus, dictum vitae ante non, consectetur vestibulum nisl. Phasellus sed consectetur dui, at iaculis metus. Vestibulum tristique ultrices urna, sed sagittis massa. Pellentesque eu odio malesuada, blandit arcu nec, hendrerit lorem.
+Donec interdum massa a ex facilisis malesuada. Donec at erat mi. Curabitur a nulla ut enim commodo scelerisque. In fringilla gravida tortor eget tincidunt. Nunc imperdiet mattis mi. Etiam vel augue quis leo congue dapibus id sit amet nisl. Cras elit nulla, dapibus ut velit sit amet, ornare imperdiet massa.
 
-** Headline 3
+** Headline 3                                         :tag1:
 :PROPERTIES:
 :ID:       3A840D3A-CEB5-4358-9861-D529348E728B
 :END:
 
-Donec convallis nibh velit, vitae varius augue viverra in. Pellentesque hendrerit nisi ut ipsum eleifend, quis finibus turpis ullamcorper. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Nullam vulputate, ex sed euismod vulputate, libero tortor consequat lacus, a condimentum felis lorem a felis. Vestibulum rutrum tortor convallis urna laoreet, non volutpat ex commodo. Nunc scelerisque ipsum eget dui ullamcorper interdum. Curabitur eget scelerisque elit. Etiam at quam pharetra, mollis eros sed, posuere nulla. Maecenas tempus quis arcu sed varius. Morbi mollis dignissim erat, eu congue turpis porta convallis. Donec finibus libero id neque lacinia, non cursus quam finibus.
+Donec convallis nibh velit, vitae varius augue viverra in. Pellentesque hendrerit nisi ut ipsum eleifend, quis finibus turpis ullamcorper. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus.
 
 #+begin_src emacs-lisp
-(defface org-tidy-top-face
-  '((t (:inherit (org-document-info-keyword))))
-  "Face for the before string.")
-
-(put-text-property 1 68 'display "" nil)
-(put-text-property 1 67 'line-height 0.5 nil)
-(put-text-property 1 67 'display (propertize "♯" 'face 'org-tidy-top-face) nil)
-(remove-text-properties 1 68 '(display nil))
-
-(text-properties-at 1)
+(defun org-tidy-overlay-exists (ovly-beg ovly-end)
+  "Check whether overlay from OVLY-BEG to OVLY-END exists."
+  (-filter (lambda (item)
+             (let* ((ov (plist-get item :ov))
+                    (old-ovly-beg (overlay-start ov))
+                    (old-ovly-end (overlay-end ov)))
+               (and (= ovly-beg old-ovly-beg)
+                    (>= ovly-end old-ovly-end))))
+           org-tidy-overlays))
 #+end_src
 
-
-* This is an example headline                                      :tag:tag2:
+* This is an example headline                     :tag:tag2:
 :PROPERTIES:
 :ID:       8335CF4B-A5ED-4E10-8E3A-3A2A48E2AB76
 :END:
@@ -139,3 +137,7 @@ wer
 #+begin_src emacs-lisp
 
 #+end_src
+
+# Local Variables:
+# org-tags-column: -60
+# End:
