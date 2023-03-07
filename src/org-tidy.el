@@ -38,19 +38,6 @@
   "docstring"
   :type 'string)
 
-(defcustom org-tidy-src-block t
-  "If non-nil, add text properties to the region markers."
-  :type 'boolean
-  :group 'org-tidy)
-
-(defcustom org-tidy-begin-src-symbol "☶"
-  "docstring"
-  :type 'string)
-
-(defcustom org-tidy-end-src-symbol "☳"
-  "docstring"
-  :type 'string)
-
 (defun org-tidy-protected-text-edit ()
   (interactive)
   (user-error "Text is protected."))
@@ -156,41 +143,6 @@
     (org-element-map (org-element-parse-buffer)
         'property-drawer #'org-tidy-properties-single)))
 
-(defun org-tidy-src-single (src-block)
-  (-let* (((type props content) src-block)
-          ((&plist :begin beg :end end :value value) props)
-          (ovly-beg-src-beg beg)
-          (ovly-beg-src-end (+ 11 beg))
-          (ovly-end-src-beg (progn
-                              (goto-char beg)
-                              (goto-char (line-end-position))
-                              (forward-char)
-                              (+ (length value) (point))))
-          (ovly-end-src-end (progn
-                              (goto-char ovly-end-src-beg)
-                              (goto-char (line-end-position))
-                              (point))))
-    (unless (or (org-tidy-overlay-exists ovly-beg-src-beg ovly-beg-src-end)
-                (org-tidy-overlay-exists ovly-end-src-beg ovly-end-src-end))
-      (let* ((ovly-beg-src (make-overlay ovly-beg-src-beg
-                                         ovly-beg-src-end nil t nil))
-             (ovly-end-src (make-overlay ovly-end-src-beg
-                                         ovly-end-src-end nil t nil)))
-        (overlay-put ovly-beg-src 'display org-tidy-begin-src-symbol)
-        (overlay-put ovly-end-src 'display org-tidy-end-src-symbol)
-
-        (push (list :type 'beg-src :ov ovly-beg-src)
-              org-tidy-overlays)
-        (push (list :type 'end-src :ov ovly-end-src)
-              org-tidy-overlays)))))
-
-(defun org-tidy-src ()
-  "Tidy source blocks."
-  (interactive)
-  (save-excursion
-    (org-element-map (org-element-parse-buffer)
-        'src-block #'org-tidy-src-single)))
-
 (defun org-untidy-property (item)
   (-let* (((&plist :ov ov
                    :backspace-beg-offset backspace-beg-offset
@@ -206,10 +158,6 @@
     (remove-text-properties backspace-beg backspace-end '(local-map nil))
     (remove-text-properties del-beg del-end '(local-map nil))))
 
-(defun org-untidy-src (item)
-  (-let* (((&plist :ov ov) item))
-    (delete-overlay ov)))
-
 (defun org-untidy-buffer ()
   "Untidy."
   (interactive)
@@ -218,12 +166,11 @@
             ((&plist :type type) item))
       (pcase type
         ('property (org-untidy-property item))
-        (_ (org-untidy-src item))))))
+        (_ nil)))))
 
 (defun org-tidy-buffer ()
   "Tidy."
   (interactive)
-  (if org-tidy-src-block (org-tidy-src))
   (if org-tidy-properties (org-tidy-properties)))
 
 ;;;###autoload
