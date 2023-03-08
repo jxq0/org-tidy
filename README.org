@@ -1,7 +1,7 @@
 #+title: org-tidy
 #+author: Xuqing Jia
 
-An Emacs minor mode to automatically tidy org-mode property drawers.
+🧹 An Emacs minor mode to automatically tidy org-mode property drawers.
 
 * Why?
 Org-mode's property drawer is a very useful feature. We can store properties associated with an entry in property drawer. I use org-roam every day. And org-roam node is an entry with ID property. But if I create many nodes in a single file, there will be a lot of property drawers. This is really annoying. Even after they are folded, there are still lines like ~:PROPERTIES: ...~ , which makes the whole buffer hard to read.
@@ -13,5 +13,23 @@ At first I googled for some tricks to hide property drawers completely. And I fo
 @@html:<div align="center">@@
 @@html:<img src='https://raw.githubusercontent.com/jxq0/org-tidy/main/screenshot.png'>@@
 @@html:</div>@@
+
+After org-tidy mode is turned on, these property drawers are hidden. And the symbol ♯ is appended after the headline. You can also customize how property drawers will be hidden.
+
+* Usage
+
+** Manual
+#+begin_src emacs-lisp
+(require 'org-tidy)
+(add-hook 'org-mode-hook #'org-tidy-mode)
+#+end_src
+
+** use-package
+#+begin_src emacs-lisp
+(use-package org-tidy
+  :ensure t
+  :config
+  (add-hook 'org-mode-hook #'org-tidy-mode))
+#+end_src
 
 * Customize

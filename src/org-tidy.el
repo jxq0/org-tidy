@@ -40,7 +40,7 @@
 
 (defun org-tidy-protected-text-edit ()
   (interactive)
-  (user-error "Text is protected."))
+  (user-error "Property drawer is protected in org-tidy mode."))
 
 (defvar org-tidy-properties-backspace-map
   (let ((map (make-sparse-keymap)))
@@ -81,16 +81,17 @@
                     (>= ovly-end old-ovly-end))))
            org-tidy-overlays))
 
-(defun org-tidy-overlay-properties-test (beg end)
-  "Hides a region by making an invisible overlay over it."
-  (interactive)
-  (let* ((pl (list :ovly-beg (1- beg)
-                   :ovly-end (1- end)
-                   :backspace-beg (1- end)
-                   :backspace-end end
-                   :del-beg (1- beg)
-                   :del-end beg)))
-    (message "%s" pl)))
+(defun org-tidy-make-protect-ov (backspace-beg backspace-end del-beg del-end)
+  "docstring"
+  (let* ((backspace-ov (make-overlay backspace-beg backspace-end nil t t))
+         (del-ov (make-overlay del-beg del-end nil t nil)))
+    (overlay-put backspace-ov
+                 'local-map org-tidy-properties-backspace-map)
+    (overlay-put del-ov
+                 'local-map org-tidy-properties-delete-map)
+
+    (push (list :type 'protect :ov backspace-ov) org-tidy-overlays)
+    (push (list :type 'protect :ov del-ov) org-tidy-overlays)))
 
 (defun org-tidy-properties-single (element)
   (-let* (((type props content) element)
@@ -124,39 +125,19 @@
            (setf push-ovly t)))
 
         (when push-ovly
-          (put-text-property backspace-beg backspace-end
-                             'local-map org-tidy-properties-backspace-map)
-          (put-text-property del-beg del-end
-                             'local-map org-tidy-properties-delete-map)
-
           (push (list :type 'property
-                      :ov ovly
-                      :backspace-beg-offset (- ovly-end backspace-beg)
-                      :backspace-end-offset (- ovly-end backspace-end)
-                      :del-beg-offset (- ovly-beg del-beg)
-                      :del-end-offset (- ovly-beg del-end))
-                org-tidy-overlays))))))
+                      :ov ovly)
+                org-tidy-overlays)
+
+          (org-tidy-make-protect-ov backspace-beg backspace-end
+                                    del-beg del-end)
+          )))))
 
 (defun org-tidy-properties ()
   "Tidy drawers."
   (save-excursion
     (org-element-map (org-element-parse-buffer)
         'property-drawer #'org-tidy-properties-single)))
-
-(defun org-untidy-property (item)
-  (-let* (((&plist :ov ov
-                   :backspace-beg-offset backspace-beg-offset
-                   :backspace-end-offset backspace-end-offset
-                   :del-beg-offset del-beg-offset
-                   :del-end-offset del-end-offset)
-           item)
-          (backspace-beg (- (overlay-end ov) backspace-beg-offset))
-          (backspace-end (- (overlay-end ov) backspace-end-offset))
-          (del-beg (- (overlay-start ov) del-beg-offset))
-          (del-end (- (overlay-start ov) del-end-offset)))
-    (delete-overlay ov)
-    (remove-text-properties backspace-beg backspace-end '(local-map nil))
-    (remove-text-properties del-beg del-end '(local-map nil))))
 
 (defun org-untidy-buffer ()
   "Untidy."
@@ -165,7 +146,8 @@
     (-let* ((item (pop org-tidy-overlays))
             ((&plist :type type) item))
       (pcase type
-        ('property (org-untidy-property item))
+        ('property (delete-overlay (plist-get item :ov)))
+        ('protect (delete-overlay (plist-get item :ov)))
         (_ nil)))))
 
 (defun org-tidy-buffer ()

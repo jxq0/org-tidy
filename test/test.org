@@ -98,34 +98,7 @@ awerewrs vel arcu tempor, luctus mauris nec, aliquet est. Aliquam tincidunt magn
 :ID:       22D3A40A-9ADB-4B1E-A7E3-464A638458ED
 :END:
 #+begin_src emacs-lisp
-(defface read-only-face
-  '((t (:inherit region)))
-  "Face for the before string.")
-
-(put-text-property 1986 2052 'read-only t)
-(put-text-property 1687 1688 'font-lock-face 'region nil)
-(put-text-property 169 235 'org-tidied t)
-(remove-text-properties 1 (point-max) '(read-only nil))
-(get-text-property 171 'org-tidied)
-(next-single-property-change 169 'org-tidied)
-
-(text-properties-at 1687)
-
-(put-text-property 1687 1689 'keymap org-tidy-properties-backspace-map nil)
-(put-text-property 1687 1689 'local-map org-tidy-properties-backspace-map nil)
-(put-text-property 1687 1689 'display "x" nil)
-(put-text-property 1687 1689 'help-echo "wer" nil)
-(put-text-property 1687 1689 'intangible t nil)
-
-(text-properties-at 1)
-(put-text-property 1793 1794 'keymap org-tidy-properties-backspace-map nil)
-
-(org-unfontify-region 1687 1689)
-
-(add-to-list 'font-lock-extra-managed-props 'keymap)
-
-(add-text-properties 1269 1270 '(keymap org-tidy-properties-backspace-map))
-(put-text-property 1269 1270 'org-tidied t)
+(org-tidy-buffer)
 #+end_src
 
 *** 1.2.2
@@ -134,8 +107,24 @@ awerewrs vel arcu tempor, luctus mauris nec, aliquet est. Aliquam tincidunt magn
 :END:
 wer
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :results silent
+(let* ((backspace-ov (make-overlay 3891 3892 nil t t)))
+  (overlay-put backspace-ov
+               'local-map org-tidy-properties-backspace-map)
 
+  (overlay-put backspace-ov
+               'face 'region))
+
+(let* ((del-ov (make-overlay 3824 3825 nil t nil)))
+  (overlay-put del-ov
+               'face 'region)
+  (overlay-put del-ov
+               'local-map org-tidy-properties-delete-map))
+#+end_src
+
+
+#+begin_src emacs-lisp :results silent
+(ov-prop (ov-at 3891))
 #+end_src
 
 # Local Variables:
