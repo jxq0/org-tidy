@@ -33,3 +33,5 @@ After org-tidy mode is turned on, these property drawers are hidden. And the sym
 #+end_src
 
 * Customize
+
+** org-tidy-properties-style

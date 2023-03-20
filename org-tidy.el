@@ -1,7 +1,30 @@
-;;; org-tidy.el --- A minor mode to tidy org-mode buffers.
+;;; org-tidy.el --- A minor mode to tidy org-mode buffers -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2023 Xuqing Jia
+
+;; Author: Xuqing Jia <jxq@jxq.me>
+;; URL: https://github.com/jxq0/org-tidy
+;; Version: 0.1
+;; Package-Requires: ((emacs "27.1"))
+;; Keywords: convenience, org
+
+;;; License:
+
+;; This program is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
+;; You should have received a copy of the GNU General Public License
+;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
-;;
+;; A minor mode to tidy org-mode buffers.
 
 (require 'org)
 (require 'org-element)
@@ -10,50 +33,45 @@
 ;;; Code:
 
 (defgroup org-tidy nil
-  "Give you a clean org-mode buffer."
+  "A minor mode to tidy `org-mode' buffers."
   :prefix "org-tidy-"
   :group 'convenience)
 
-(defcustom org-tidy-properties t
-  "If non-nil, add text properties to the region markers."
-  :type 'boolean
-  :group 'org-tidy)
-
 (defcustom org-tidy-properties-style 'inline
-  "If non-nil, add text properties to the region markers."
+  "How to tidy property drawers."
   :group 'org-tidy
   :type '(choice
-          (const :tag "Only show fringe bitmap" fringe)
-          (const :tag "Only show inline symbol" inline)
-          (const :tag "Show nothing" nothing)))
+          (const :tag "Show fringe bitmap" fringe)
+          (const :tag "Show inline symbol" inline)
+          (const :tag "Completely invisible" invisible)))
 
-(defcustom org-tidy-top-property-style 'hide
-  "If non-nil, add text properties to the region markers."
+(defcustom org-tidy-top-property-style 'invisible
+  "How to tidy the topmost property drawer."
   :group 'org-tidy
   :type '(choice
-          (const :tag "Hide completely" hide)
+          (const :tag "Completely invisible" invisible)
           (const :tag "Keep" keep)))
 
 (defcustom org-tidy-properties-inline-symbol "♯"
-  "docstring"
+  ""
   :type 'string)
 
 (defun org-tidy-protected-text-edit ()
-  (interactive)
-  (user-error "Property drawer is protected in org-tidy mode."))
+  "Keymap to protect property drawers."
+  (user-error "Property drawer is protected in org-tidy mode"))
 
 (defvar org-tidy-properties-backspace-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "<backspace>") #'org-tidy-protected-text-edit)
+    (define-key map (kbd "<backspace>") 'org-tidy-protected-text-edit)
     map)
-  "keymap for property drawers")
+  "Keymap to protect property drawers.")
 
 (defvar org-tidy-properties-delete-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-d") #'org-tidy-protected-text-edit)
-    (define-key map (kbd "<deletechar>") #'org-tidy-protected-text-edit)
+    (define-key map (kbd "<deletechar>") 'org-tidy-protected-text-edit)
     map)
-  "keymap for property drawers")
+  "Keymap to protect property drawers.")
 
 (defvar-local org-tidy-overlays nil
   "Variable to store the regions we put an overlay on.
@@ -94,15 +112,14 @@
     (push (list :type 'protect :ov del-ov) org-tidy-overlays)))
 
 (defun org-tidy-properties-single (element)
-  (-let* (((type props content) element)
+  "Tidy a single property ELEMENT."
+  (-let* (((_ props _) element)
           ((&plist :begin beg :end end) props)
           (is-top-property (= 1 beg))
           (ovly-beg (if is-top-property 1 (1- beg)))
           (ovly-end (if is-top-property end (1- end))))
     (unless (org-tidy-overlay-exists ovly-beg ovly-end)
-      (let* ((read-only-begin ovly-beg)
-             (read-only-end end)
-             (backspace-beg (1- end))
+      (let* ((backspace-beg (1- end))
              (backspace-end end)
              (del-beg (max 1 (1- beg)))
              (del-end (1+ del-beg))
@@ -111,7 +128,7 @@
         (pcase (list is-top-property
                      org-tidy-top-property-style
                      org-tidy-properties-style)
-          (`(t hide ,_)
+          (`(t invisible ,_)
            (overlay-put ovly 'display "")
            (setf push-ovly t))
           (`(t keep ,_) (delete-overlay ovly))
@@ -130,8 +147,7 @@
                 org-tidy-overlays)
 
           (org-tidy-make-protect-ov backspace-beg backspace-end
-                                    del-beg del-end)
-          )))))
+                                    del-beg del-end))))))
 
 (defun org-tidy-properties ()
   "Tidy drawers."
@@ -139,7 +155,7 @@
     (org-element-map (org-element-parse-buffer)
         'property-drawer #'org-tidy-properties-single)))
 
-(defun org-untidy-buffer ()
+(defun org-tidy-untidy-buffer ()
   "Untidy."
   (interactive)
   (while org-tidy-overlays
@@ -153,7 +169,7 @@
 (defun org-tidy-buffer ()
   "Tidy."
   (interactive)
-  (if org-tidy-properties (org-tidy-properties)))
+  (org-tidy-properties))
 
 ;;;###autoload
 (define-minor-mode org-tidy-mode
@@ -172,7 +188,7 @@
       (if (eq org-tidy-properties-style 'fringe)
           (progn (setq left-fringe-width nil)
                  (set-window-fringes nil nil)))
-      (org-untidy-buffer)
+      (org-tidy-untidy-buffer)
       (remove-hook 'before-save-hook 'org-tidy-buffer t))))
 
 (provide 'org-tidy)
