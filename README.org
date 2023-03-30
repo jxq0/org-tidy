@@ -34,7 +34,7 @@ After org-tidy mode is turned on, these property drawers are hidden. And the sym
 
 * Customize
 ** org-tidy-top-property-style
-How to display the property at the beginning of buffer. ~\keep~ will do nothing. ~\invisible~ will hide it.
+How to display the property at the beginning of buffer. ~keep~ will do nothing. ~invisible~ will hide it.
 
 ** org-tidy-properties-style
 How to display other property drawers.
