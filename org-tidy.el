@@ -53,7 +53,7 @@
           (const :tag "Keep" keep)))
 
 (defcustom org-tidy-properties-inline-symbol "♯"
-  ""
+  "The inline symbol."
   :type 'string)
 
 (defun org-tidy-protected-text-edit ()
@@ -100,7 +100,7 @@
            org-tidy-overlays))
 
 (defun org-tidy-make-protect-ov (backspace-beg backspace-end del-beg del-end)
-  "docstring"
+  "Make two read-only overlay: (BACKSPACE-BEG, BACKSPACE-END) (DEL-BEG, DEL-END)."
   (let* ((backspace-ov (make-overlay backspace-beg backspace-end nil t t))
          (del-ov (make-overlay del-beg del-end nil t nil)))
     (overlay-put backspace-ov
