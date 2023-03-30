@@ -74,9 +74,7 @@
   "Keymap to protect property drawers.")
 
 (defvar-local org-tidy-overlays nil
-  "Variable to store the regions we put an overlay on.
-:property-beg-offset is begin of property minus begin of overlay.
-:property-end-offset is end of property minus end of overlay.")
+  "Variable to store the regions we put an overlay on.")
 
 (define-fringe-bitmap
   'org-tidy-fringe-bitmap-sharp
