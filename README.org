@@ -33,5 +33,15 @@ After org-tidy mode is turned on, these property drawers are hidden. And the sym
 #+end_src
 
 * Customize
+** org-tidy-top-property-style
+How to display the property at the beginning of buffer. ~\keep~ will do nothing. ~\invisible~ will hide it.
 
 ** org-tidy-properties-style
+How to display other property drawers.
+
+- ~fringe~ will hide the property drawer and show a indicator in the left fringe
+- ~inline~ will hide the property drawer and append a symbol (default to ♯) at the end of previous line
+- ~invisible~ will just hide the property drawer
+
+** org-tidy-properties-inline-symbol
+The inline symbol.
