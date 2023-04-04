@@ -5,7 +5,7 @@
 ;; Author: Xuqing Jia <jxq@jxq.me>
 ;; URL: https://github.com/jxq0/org-tidy
 ;; Version: 0.1
-;; Package-Requires: ((emacs "27.1"))
+;; Package-Requires: ((emacs "27.1") (dash "2.19.1"))
 ;; Keywords: convenience, org
 
 ;;; License:
@@ -181,13 +181,13 @@
               (setq left-fringe-width width)
               (set-window-fringes nil width)))
         (org-tidy-buffer)
-        (add-hook 'before-save-hook 'org-tidy-buffer nil t))
+        (add-hook 'before-save-hook #'org-tidy-buffer nil t))
     (progn
       (if (eq org-tidy-properties-style 'fringe)
           (progn (setq left-fringe-width nil)
                  (set-window-fringes nil nil)))
       (org-tidy-untidy-buffer)
-      (remove-hook 'before-save-hook 'org-tidy-buffer t))))
+      (remove-hook 'before-save-hook #'org-tidy-buffer t))))
 
 (provide 'org-tidy)
 
