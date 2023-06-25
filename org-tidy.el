@@ -58,18 +58,19 @@
 
 (defun org-tidy-protected-text-edit ()
   "Keymap to protect property drawers."
+  (interactive)
   (user-error "Property drawer is protected in org-tidy mode"))
 
 (defvar org-tidy-properties-backspace-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "<backspace>") 'org-tidy-protected-text-edit)
+    (define-key map (kbd "<backspace>") #'org-tidy-protected-text-edit)
     map)
   "Keymap to protect property drawers.")
 
 (defvar org-tidy-properties-delete-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-d") #'org-tidy-protected-text-edit)
-    (define-key map (kbd "<deletechar>") 'org-tidy-protected-text-edit)
+    (define-key map (kbd "<deletechar>") #'org-tidy-protected-text-edit)
     map)
   "Keymap to protect property drawers.")
 
