@@ -77,6 +77,9 @@
 (defvar-local org-tidy-overlays nil
   "Variable to store the regions we put an overlay on.")
 
+(defvar-local org-tidy-toggle-state t
+  "Variable to control whether this buffer should be tidied.")
+
 (define-fringe-bitmap
   'org-tidy-fringe-bitmap-sharp
   [#b00100100
@@ -148,12 +151,6 @@
           (org-tidy-make-protect-ov backspace-beg backspace-end
                                     del-beg del-end))))))
 
-(defun org-tidy-properties ()
-  "Tidy drawers."
-  (save-excursion
-    (org-element-map (org-element-parse-buffer)
-        'property-drawer #'org-tidy-properties-single)))
-
 (defun org-tidy-untidy-buffer ()
   "Untidy."
   (interactive)
@@ -168,7 +165,23 @@
 (defun org-tidy-buffer ()
   "Tidy."
   (interactive)
-  (org-tidy-properties))
+  (save-excursion
+    (org-element-map (org-element-parse-buffer)
+        'property-drawer #'org-tidy-properties-single)))
+
+(defun org-tidy-toggle ()
+  "Toggle between tidy and untidy."
+  (interactive)
+  (if org-tidy-toggle-state
+      (progn (setq org-tidy-toggle-state nil)
+             (org-tidy-untidy-buffer))
+    (progn (setq org-tidy-toggle-state t)
+           (org-tidy-buffer))))
+
+(defun org-tidy-on-save ()
+  "Tidy buffer on save if `org-tidy-toggle-state' is t."
+  (interactive)
+  (if org-tidy-toggle-state (org-tidy-buffer)))
 
 ;;;###autoload
 (define-minor-mode org-tidy-mode
@@ -182,13 +195,13 @@
               (setq left-fringe-width width)
               (set-window-fringes nil width)))
         (org-tidy-buffer)
-        (add-hook 'before-save-hook #'org-tidy-buffer nil t))
+        (add-hook 'before-save-hook #'org-tidy-on-save nil t))
     (progn
       (if (eq org-tidy-properties-style 'fringe)
           (progn (setq left-fringe-width nil)
                  (set-window-fringes nil nil)))
       (org-tidy-untidy-buffer)
-      (remove-hook 'before-save-hook #'org-tidy-buffer t))))
+      (remove-hook 'before-save-hook #'org-tidy-on-save t))))
 
 (provide 'org-tidy)
 
