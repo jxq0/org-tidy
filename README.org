@@ -32,6 +32,11 @@ After org-tidy mode is turned on, these property drawers are hidden. And the sym
   (add-hook 'org-mode-hook #'org-tidy-mode))
 #+end_src
 
+** How to edit property drawers in org-tidy-mode?
+If you need to edit only one drawer temporarily, you can simply ~M-x org-tidy-untidy-buffer~. When you save the buffer, it will be tidied again.
+
+If you need to edit a lot of drawers, you can ~M-x org-tidy-toggle~. Then the buffer will not be tidied on save, until ~M-x org-tidy-toggle~ again.
+
 * Customize
 ** org-tidy-top-property-style
 How to display the property at the beginning of buffer. ~keep~ will do nothing. ~invisible~ will hide it.
