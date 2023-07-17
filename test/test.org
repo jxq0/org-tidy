@@ -104,6 +104,7 @@ awerewrs vel arcu tempor, luctus mauris nec, aliquet est. Aliquam tincidunt magn
 *** 1.2.2
 :PROPERTIES:
 :ID:       9331B8EC-6DA8-4E4D-836E-7606650C101A
+:MAIL_TO:  jxqwr
 :END:
 wer
 
@@ -126,6 +127,14 @@ wer
 #+begin_src emacs-lisp :results silent
 (ov-prop (ov-at 3891))
 #+end_src
+
+*** TODO logbook test
+:LOGBOOK:
+- Note taken on [2023-07-17 Mon 08:16] \\
+  note
+:END:
+
+* End
 
 # Local Variables:
 # org-tags-column: -60

@@ -54,7 +54,18 @@
 
 (defcustom org-tidy-properties-inline-symbol "♯"
   "The inline symbol."
+  :group 'org-tidy
   :type 'string)
+
+(defcustom org-tidy-drawer-filter ()
+  "What kind of drawers to tidy."
+  :group 'org-tidy
+  :type '(repeat (choice (const :tag "Property drawers" properties)
+                         (const :tag "All drawers" logbook)
+                         (cons :tag "names"
+                               (const names)
+                               (repeat string))
+                         (function :tag "Custom filter function"))))
 
 (defun org-tidy-protected-text-edit ()
   "Keymap to protect property drawers."
