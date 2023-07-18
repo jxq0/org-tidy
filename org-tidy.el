@@ -76,12 +76,7 @@
           (const :tag "Tidy property drawers" t)
           (const :tag "Keep property drawers" nil)))
 
-(defcustom org-tidy-property-drawer-property-whitelist ()
-  "Whether to tidy property drawers or not."
-  :group 'org-tidy
-  :type '(repeat string))
-
-(defcustom org-tidy-property-drawer-property-blacklist ()
+(defcustom org-tidy-property-drawer-exclude-property ()
   "When Non-nil and `org-tidy-property-drawer-flag' is t, property drawers which contains node in this list is tidied."
   :group 'org-tidy
   :type '(repeat string))
@@ -157,16 +152,16 @@
 
 (defun org-tidy-properties-single (element)
   "Tidy a single property ELEMENT."
-  (-let* (((type props _) element)
-          ((&plist :begin beg :end end) props)
+  (-let* (((type content _) element)
+          (should-tidy (pcase type
+                         ('drawer org-tidy-drawer-flag)
+                         ('property-drawer (progn ;;(jxq-pp content)
+                                             org-tidy-property-drawer-flag))))
+          ((&plist :begin beg :end end) content)
           (is-top-property (= 1 beg))
           (ovly-beg (if is-top-property 1 (1- beg)))
           (ovly-end (if is-top-property end (1- end))))
-    (pcase type
-      ('drawer org-tidy-drawer-flag)
-      ('property-drawer org-tidy-property-drawer-flag))
-
-    (unless (org-tidy-overlay-exists ovly-beg ovly-end)
+    (when (and should-tidy (not (org-tidy-overlay-exists ovly-beg ovly-end)))
       (let* ((backspace-beg (1- end))
              (backspace-end end)
              (del-beg (max 1 (1- beg)))
