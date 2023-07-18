@@ -60,12 +60,43 @@
 (defcustom org-tidy-drawer-filter ()
   "What kind of drawers to tidy."
   :group 'org-tidy
-  :type '(repeat (choice (const :tag "Property drawers" properties)
-                         (const :tag "All drawers" logbook)
-                         (cons :tag "names"
+  :type '(repeat (choice (const :tag "Tidy all property drawers" property)
+                         (const :tag "Tidy all drawers" all)
+                         (cons :tag "Filter by drawer names"
                                (const names)
                                (repeat string))
-                         (function :tag "Custom filter function"))))
+                         (cons :tag "Filter by function"
+                               (const filter-func)
+                               (function)))))
+
+(defcustom org-tidy-property-drawer-flag t
+  "Whether to tidy property drawers or not."
+  :group 'org-tidy
+  :type '(choice
+          (const :tag "Tidy property drawers" t)
+          (const :tag "Keep property drawers" nil)))
+
+(defcustom org-tidy-property-drawer-property-whitelist ()
+  "Whether to tidy property drawers or not."
+  :group 'org-tidy
+  :type '(repeat string))
+
+(defcustom org-tidy-property-drawer-property-blacklist ()
+  "When Non-nil and `org-tidy-property-drawer-flag' is t, property drawers which contains node in this list is tidied."
+  :group 'org-tidy
+  :type '(repeat string))
+
+(defcustom org-tidy-drawer-flag t
+  "Whether to tidy general drawers or not."
+  :group 'org-tidy
+  :type '(choice
+          (const :tag "Tidy general drawers" t)
+          (const :tag "Keep general drawers" nil)))
+
+(defcustom org-tidy-drawer-name-filter ()
+  "If `org-tidy-drawer-flag' is t, only drawers whose name match `org-tidy-drawer-name-filter' will be tidied."
+  :group 'org-tidy
+  :type '(repeat string))
 
 (defun org-tidy-protected-text-edit ()
   "Keymap to protect property drawers."
@@ -126,11 +157,15 @@
 
 (defun org-tidy-properties-single (element)
   "Tidy a single property ELEMENT."
-  (-let* (((_ props _) element)
+  (-let* (((type props _) element)
           ((&plist :begin beg :end end) props)
           (is-top-property (= 1 beg))
           (ovly-beg (if is-top-property 1 (1- beg)))
           (ovly-end (if is-top-property end (1- end))))
+    (pcase type
+      ('drawer org-tidy-drawer-flag)
+      ('property-drawer org-tidy-property-drawer-flag))
+
     (unless (org-tidy-overlay-exists ovly-beg ovly-end)
       (let* ((backspace-beg (1- end))
              (backspace-end end)
@@ -178,7 +213,7 @@
   (interactive)
   (save-excursion
     (org-element-map (org-element-parse-buffer)
-        'property-drawer #'org-tidy-properties-single)))
+        '(property-drawer drawer) #'org-tidy-properties-single)))
 
 (defun org-tidy-toggle ()
   "Toggle between tidy and untidy."
