@@ -150,13 +150,37 @@
     (push (list :type 'protect :ov backspace-ov) org-tidy-overlays)
     (push (list :type 'protect :ov del-ov) org-tidy-overlays)))
 
+(defun org-tidy--exclude-property (element)
+  (-let* (((type content . children) element))
+    (when (eq type 'node-property)
+      (> (length (member (plist-get content :key)
+                         org-tidy-property-drawer-exclude-property))
+         0))))
+
+(defun org-tidy-property-excluded-p (property-drawer-children)
+  "Return t if property drawer contains a key in `org-tidy-property-drawer-exclude-property', otherwise return nil."
+  (when org-tidy-property-drawer-exclude-property
+    ;; TODO: while
+    (mapcar
+     (lambda (element)
+       (-let* (((type content . children) element))
+         (when (eq type 'node-property)
+           (member (plist-get content :key)
+                   org-tidy-property-drawer-exclude-property))))
+     property-drawer-children)))
+
 (defun org-tidy-properties-single (element)
   "Tidy a single property ELEMENT."
-  (-let* (((type content _) element)
-          (should-tidy (pcase type
-                         ('drawer org-tidy-drawer-flag)
-                         ('property-drawer (progn ;;(jxq-pp content)
-                                             org-tidy-property-drawer-flag))))
+  (-let* (((type content . children) element)
+          (should-tidy
+           (pcase type
+             ('drawer org-tidy-drawer-flag)
+             ('property-drawer
+              (progn
+                (jxq-pp content (format "element %s" type) 3)
+                (jxq-pp children "children" 4)
+                (jxq-pp (org-tidy-property-excluded-p children) "result")
+                org-tidy-property-drawer-flag))))
           ((&plist :begin beg :end end) content)
           (is-top-property (= 1 beg))
           (ovly-beg (if is-top-property 1 (1- beg)))
