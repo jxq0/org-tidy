@@ -148,26 +148,18 @@
     (push (list :type 'protect :ov backspace-ov) org-tidy-overlays)
     (push (list :type 'protect :ov del-ov) org-tidy-overlays)))
 
-(defun org-tidy--exclude-property (element)
-  (-let* (((type content . children) element))
-    (when (eq type 'node-property)
-      (not (null (member (plist-get content :key)
-                     org-tidy-property-drawer-property-blacklist))))))
-
-(defun org-tidy-property-excluded-p (l)
-  "Return t if property drawer contains a key
-in `org-tidy-property-drawer-property-blacklist', otherwise return nil."
-  (when-let* ((org-tidy-property-drawer-property-blacklist)
-              (not-found t))
-    (while (and l not-found)
+(defun org-tidy-property-drawer-has-key-in-list (l check-list)
+  "Return t if property drawer contains a key in CHECK-LIST, otherwise return nil."
+  (when-let* ((check-list)
+              (not-hit t))
+    (while (and l not-hit)
       (-let* ((element (car l))
               ((type content) element))
          (when (eq type 'node-property)
-           (if (member (plist-get content :key)
-                       org-tidy-property-drawer-property-blacklist)
-               (setq not-found nil)))
+           (if (member (plist-get content :key) check-list)
+               (setq not-hit nil)))
          (setq l (cdr l))))
-    (not not-found)))
+    (not not-hit)))
 
 (defun org-tidy-properties-single (element)
   "Tidy a single property ELEMENT."
@@ -178,7 +170,12 @@ in `org-tidy-property-drawer-property-blacklist', otherwise return nil."
                         org-tidy-general-drawer-flag))
              ('property-drawer
               (and org-tidy-property-drawer-flag
-                   (not (org-tidy-property-excluded-p children))))))
+                   (if org-tidy-property-drawer-property-whitelist
+                       (org-tidy-property-drawer-has-key-in-list
+                        children org-tidy-property-drawer-property-whitelist)
+                     (not (org-tidy-property-drawer-has-key-in-list
+                           children
+                           org-tidy-property-drawer-property-blacklist)))))))
 
           ((&plist :begin beg :end end) content)
           (is-top-property (= 1 beg))
