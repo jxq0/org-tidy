@@ -57,18 +57,6 @@
   :group 'org-tidy
   :type 'string)
 
-(defcustom org-tidy-drawer-filter ()
-  "What kind of drawers to tidy."
-  :group 'org-tidy
-  :type '(repeat (choice (const :tag "Tidy all property drawers" property)
-                         (const :tag "Tidy all drawers" all)
-                         (cons :tag "Filter by drawer names"
-                               (const names)
-                               (repeat string))
-                         (cons :tag "Filter by function"
-                               (const filter-func)
-                               (function)))))
-
 (defcustom org-tidy-property-drawer-flag t
   "Whether to tidy property drawers or not."
   :group 'org-tidy
@@ -76,20 +64,30 @@
           (const :tag "Tidy property drawers" t)
           (const :tag "Keep property drawers" nil)))
 
-(defcustom org-tidy-property-drawer-exclude-property ()
-  "When Non-nil and `org-tidy-property-drawer-flag' is t, property drawers which contains node in this list is tidied."
+(defcustom org-tidy-property-drawer-property-whitelist ()
+  "If t, and `org-tidy-property-drawer-flag' is t, only property drawers which contains property in this list will be tidied."
   :group 'org-tidy
   :type '(repeat string))
 
-(defcustom org-tidy-drawer-flag t
+(defcustom org-tidy-property-drawer-property-blacklist ()
+  "If t, and `org-tidy-property-drawer-flag' is t, property drawers which contains property in this list will not be tidied."
+  :group 'org-tidy
+  :type '(repeat string))
+
+(defcustom org-tidy-general-drawer-flag t
   "Whether to tidy general drawers or not."
   :group 'org-tidy
   :type '(choice
           (const :tag "Tidy general drawers" t)
           (const :tag "Keep general drawers" nil)))
 
-(defcustom org-tidy-drawer-name-filter ()
-  "If `org-tidy-drawer-flag' is t, only drawers whose name match `org-tidy-drawer-name-filter' will be tidied."
+(defcustom org-tidy-general-drawer-name-whitelist ()
+  "If t, and `org-tidy-general-drawer-flag' is t, only general drawers whose name is in this list will be tidied."
+  :group 'org-tidy
+  :type '(repeat string))
+
+(defcustom org-tidy-general-drawer-name-blacklist ()
+  "If t, and `org-tidy-general-drawer-flag' is t, general drawers whose name is in this list will not be tidied."
   :group 'org-tidy
   :type '(repeat string))
 
@@ -153,39 +151,41 @@
 (defun org-tidy--exclude-property (element)
   (-let* (((type content . children) element))
     (when (eq type 'node-property)
-      (> (length (member (plist-get content :key)
-                         org-tidy-property-drawer-exclude-property))
-         0))))
+      (not (null (member (plist-get content :key)
+                     org-tidy-property-drawer-property-blacklist))))))
 
-(defun org-tidy-property-excluded-p (property-drawer-children)
-  "Return t if property drawer contains a key in `org-tidy-property-drawer-exclude-property', otherwise return nil."
-  (when org-tidy-property-drawer-exclude-property
-    ;; TODO: while
-    (mapcar
-     (lambda (element)
-       (-let* (((type content . children) element))
+(defun org-tidy-property-excluded-p (l)
+  "Return t if property drawer contains a key
+in `org-tidy-property-drawer-property-blacklist', otherwise return nil."
+  (when-let* ((org-tidy-property-drawer-property-blacklist)
+              (not-found t))
+    (while (and l not-found)
+      (-let* ((element (car l))
+              ((type content) element))
          (when (eq type 'node-property)
-           (member (plist-get content :key)
-                   org-tidy-property-drawer-exclude-property))))
-     property-drawer-children)))
+           (if (member (plist-get content :key)
+                       org-tidy-property-drawer-property-blacklist)
+               (setq not-found nil)))
+         (setq l (cdr l))))
+    (not not-found)))
 
 (defun org-tidy-properties-single (element)
   "Tidy a single property ELEMENT."
   (-let* (((type content . children) element)
           (should-tidy
            (pcase type
-             ('drawer org-tidy-drawer-flag)
+             ('drawer (progn
+                        org-tidy-general-drawer-flag))
              ('property-drawer
-              (progn
-                (jxq-pp content (format "element %s" type) 3)
-                (jxq-pp children "children" 4)
-                (jxq-pp (org-tidy-property-excluded-p children) "result")
-                org-tidy-property-drawer-flag))))
+              (and org-tidy-property-drawer-flag
+                   (not (org-tidy-property-excluded-p children))))))
+
           ((&plist :begin beg :end end) content)
           (is-top-property (= 1 beg))
           (ovly-beg (if is-top-property 1 (1- beg)))
           (ovly-end (if is-top-property end (1- end))))
-    (when (and should-tidy (not (org-tidy-overlay-exists ovly-beg ovly-end)))
+    (when (and should-tidy
+               (not (org-tidy-overlay-exists ovly-beg ovly-end)))
       (let* ((backspace-beg (1- end))
              (backspace-end end)
              (del-beg (max 1 (1- beg)))
