@@ -148,35 +148,52 @@
     (push (list :type 'protect :ov backspace-ov) org-tidy-overlays)
     (push (list :type 'protect :ov del-ov) org-tidy-overlays)))
 
-(defun org-tidy-property-drawer-has-key-in-list (l check-list)
+(defun org-tidy-property-drawer-has-key-in-list (element check-list)
   "Return t if property drawer contains a key in CHECK-LIST, otherwise return nil."
-  (when-let* ((check-list)
-              (not-hit t))
-    (while (and l not-hit)
-      (-let* ((element (car l))
-              ((type content) element))
-         (when (eq type 'node-property)
-           (if (member (plist-get content :key) check-list)
-               (setq not-hit nil)))
-         (setq l (cdr l))))
-    (not not-hit)))
+  (-let* (((type content . l) element))
+    (when-let* ((check-list)
+                (not-hit t))
+      (while (and l not-hit)
+        (-let* ((element (car l))
+                ((type content) element))
+          (when (eq type 'node-property)
+            (if (member (plist-get content :key) check-list)
+                (setq not-hit nil)))
+          (setq l (cdr l))))
+      (not not-hit))))
+
+(defun org-tidy-general-drawer-name-in-list (element check-list)
+  "Return t if property drawer contains a key in CHECK-LIST, otherwise return nil."
+  (-let* (((type content . l) element)
+          (drawer-name (plist-get content :drawer-name)))
+    (if (member drawer-name check-list)
+        t)))
+
+(defun org-tidy-should-tidy (element)
+  (-let* (((type content . children) element))
+    (pcase type
+      ('drawer
+       (and org-tidy-general-drawer-flag
+            (if org-tidy-general-drawer-name-whitelist
+                (org-tidy-general-drawer-name-in-list
+                 element
+                 org-tidy-general-drawer-name-whitelist)
+              (not (org-tidy-general-drawer-name-in-list
+                    element
+                    org-tidy-general-drawer-name-blacklist)))))
+      ('property-drawer
+       (and org-tidy-property-drawer-flag
+            (if org-tidy-property-drawer-property-whitelist
+                (org-tidy-property-drawer-has-key-in-list
+                 element org-tidy-property-drawer-property-whitelist)
+              (not (org-tidy-property-drawer-has-key-in-list
+                    element
+                    org-tidy-property-drawer-property-blacklist))))))))
 
 (defun org-tidy-properties-single (element)
   "Tidy a single property ELEMENT."
   (-let* (((type content . children) element)
-          (should-tidy
-           (pcase type
-             ('drawer (progn
-                        org-tidy-general-drawer-flag))
-             ('property-drawer
-              (and org-tidy-property-drawer-flag
-                   (if org-tidy-property-drawer-property-whitelist
-                       (org-tidy-property-drawer-has-key-in-list
-                        children org-tidy-property-drawer-property-whitelist)
-                     (not (org-tidy-property-drawer-has-key-in-list
-                           children
-                           org-tidy-property-drawer-property-blacklist)))))))
-
+          (should-tidy (org-tidy-should-tidy element))
           ((&plist :begin beg :end end) content)
           (is-top-property (= 1 beg))
           (ovly-beg (if is-top-property 1 (1- beg)))
