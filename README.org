@@ -50,3 +50,21 @@ How to display other property drawers.
 
 ** org-tidy-properties-inline-symbol
 The inline symbol.
+
+** org-tidy-property-drawer-flag
+Whether to tidy property drawers.
+
+** org-tidy-property-drawer-property-whitelist
+The whitelist of properties. If set, only property drawers which contain property in this list *will* be tidied.
+
+** org-tidy-property-drawer-property-blacklist
+Blacklist of properties. If set, property drawers which contain property in this list *will not* be tidied.
+
+** org-tidy-general-drawer-flag
+Non-nil means should tidy general drawers.
+
+** org-tidy-general-drawer-name-whitelist
+Whitelist of drawer names. If set, only general drawers whose name is in this list *will* be tidied.
+
+** org-tidy-general-drawer-name-blacklist
+Blacklist of drawer names. If set, general drawers whose name is in this list *will not* be tidied.
