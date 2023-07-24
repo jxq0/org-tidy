@@ -58,36 +58,44 @@
   :type 'string)
 
 (defcustom org-tidy-property-drawer-flag t
-  "Whether to tidy property drawers or not."
+  "Non-nil means should tidy property drawers."
   :group 'org-tidy
   :type '(choice
           (const :tag "Tidy property drawers" t)
           (const :tag "Keep property drawers" nil)))
 
 (defcustom org-tidy-property-drawer-property-whitelist ()
-  "If t, and `org-tidy-property-drawer-flag' is t, only property drawers which contains property in this list will be tidied."
+  "Whitelist of properties.
+If set, only property drawers which contain property in this list
+ will be tidied."
   :group 'org-tidy
   :type '(repeat string))
 
 (defcustom org-tidy-property-drawer-property-blacklist ()
-  "If t, and `org-tidy-property-drawer-flag' is t, property drawers which contains property in this list will not be tidied."
+  "Blacklist of properties.
+If set, property drawers which contain property in this list
+will not be tidied."
   :group 'org-tidy
   :type '(repeat string))
 
 (defcustom org-tidy-general-drawer-flag t
-  "Whether to tidy general drawers or not."
+  "Non-nil means should tidy general drawers."
   :group 'org-tidy
   :type '(choice
           (const :tag "Tidy general drawers" t)
           (const :tag "Keep general drawers" nil)))
 
 (defcustom org-tidy-general-drawer-name-whitelist ()
-  "If t, and `org-tidy-general-drawer-flag' is t, only general drawers whose name is in this list will be tidied."
+  "Whitelist of drawer names.
+If set, only general drawers whose name is in this list
+ will be tidied."
   :group 'org-tidy
   :type '(repeat string))
 
 (defcustom org-tidy-general-drawer-name-blacklist ()
-  "If t, and `org-tidy-general-drawer-flag' is t, general drawers whose name is in this list will not be tidied."
+  "Blacklist of drawer names.
+If set, general drawers whose name is in this list
+will not be tidied."
   :group 'org-tidy
   :type '(repeat string))
 
@@ -149,8 +157,9 @@
     (push (list :type 'protect :ov del-ov) org-tidy-overlays)))
 
 (defun org-tidy-property-drawer-has-key-in-list (element check-list)
-  "Return t if property drawer contains a key in CHECK-LIST, otherwise return nil."
-  (-let* (((type content . l) element))
+  "Return t if the property drawer ELEMENT contain a key in CHECK-LIST.
+Otherwise return nil."
+  (-let* ((l (cddr element)))
     (when-let* ((check-list)
                 (not-hit t))
       (while (and l not-hit)
@@ -163,14 +172,16 @@
       (not not-hit))))
 
 (defun org-tidy-general-drawer-name-in-list (element check-list)
-  "Return t if property drawer contains a key in CHECK-LIST, otherwise return nil."
-  (-let* (((type content . l) element)
+  "Return t if the general drawer ELEMENT contain a key in CHECK-LIST.
+Otherwise return nil."
+  (-let* ((content (cadr element))
           (drawer-name (plist-get content :drawer-name)))
     (if (member drawer-name check-list)
         t)))
 
 (defun org-tidy-should-tidy (element)
-  (-let* (((type content . children) element))
+  "Return whether ELEMENT should be tidied."
+  (-let* ((type (car element)))
     (pcase type
       ('drawer
        (and org-tidy-general-drawer-flag
@@ -192,7 +203,7 @@
 
 (defun org-tidy-properties-single (element)
   "Tidy a single property ELEMENT."
-  (-let* (((type content . children) element)
+  (-let* ((content (cadr element))
           (should-tidy (org-tidy-should-tidy element))
           ((&plist :begin beg :end end) content)
           (is-top-property (= 1 beg))
