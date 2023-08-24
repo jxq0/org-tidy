@@ -205,8 +205,8 @@ Otherwise return nil."
   "Tidy a single property ELEMENT."
   (let* ((content (cadr element))
          (should-tidy (org-tidy-should-tidy element))
-         (beg (org-element-begin element))
-         (end (org-element-end element))
+         (beg (org-element-property :begin element))
+         (end (org-element-property :end element))
          (is-top-property (= 1 beg))
          (ovly-beg (if is-top-property 1 (1- beg)))
          (ovly-end (if is-top-property end (1- end))))
