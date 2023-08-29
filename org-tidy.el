@@ -203,12 +203,13 @@ Otherwise return nil."
 
 (defun org-tidy-properties-single (element)
   "Tidy a single property ELEMENT."
-  (-let* ((content (cadr element))
-          (should-tidy (org-tidy-should-tidy element))
-          ((&plist :begin beg :end end) content)
-          (is-top-property (= 1 beg))
-          (ovly-beg (if is-top-property 1 (1- beg)))
-          (ovly-end (if is-top-property end (1- end))))
+  (let* ((content (cadr element))
+         (should-tidy (org-tidy-should-tidy element))
+         (beg (org-element-property :begin element))
+         (end (org-element-property :end element))
+         (is-top-property (= 1 beg))
+         (ovly-beg (if is-top-property 1 (1- beg)))
+         (ovly-end (if is-top-property end (1- end))))
     (when (and should-tidy
                (not (org-tidy-overlay-exists ovly-beg ovly-end)))
       (let* ((backspace-beg (1- end))
