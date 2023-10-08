@@ -99,6 +99,11 @@ will not be tidied."
   :group 'org-tidy
   :type '(repeat string))
 
+(defcustom org-tidy-log nil
+  "Enable this option to print log message in `*org-tidy*' buffer"
+  :group 'org-tidy
+  :type 'boolean)
+
 (defun org-tidy-protected-text-edit ()
   "Keymap to protect property drawers."
   (interactive)
@@ -210,6 +215,7 @@ Otherwise return nil."
          (is-top-property (= 1 beg))
          (ovly-beg (if is-top-property 1 (1- beg)))
          (ovly-end (if is-top-property end (1- end))))
+    (org-tidy--log "%d %d" ovly-beg ovly-end)
     (when (and should-tidy
                (not (org-tidy-overlay-exists ovly-beg ovly-end)))
       (let* ((backspace-beg (1- end))
@@ -273,6 +279,15 @@ Otherwise return nil."
   "Tidy buffer on save if `org-tidy-toggle-state' is t."
   (interactive)
   (if org-tidy-toggle-state (org-tidy-buffer)))
+
+(defun org-tidy--log (format-string &rest args)
+  (when org-tidy-log
+    (let* ((msg (apply #'format format-string args))
+           (buffer (get-buffer-create "*org-tidy*"))
+           (real-msg (format "%s %s\n" (format-time-string "[%Y-%m-%d %T]") msg)))
+      (with-current-buffer buffer
+        (goto-char (point-max))
+        (insert real-msg)))))
 
 ;;;###autoload
 (define-minor-mode org-tidy-mode
