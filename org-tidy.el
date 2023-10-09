@@ -99,11 +99,6 @@ will not be tidied."
   :group 'org-tidy
   :type '(repeat string))
 
-(defcustom org-tidy-log nil
-  "Enable this option to print log message in `*org-tidy*' buffer"
-  :group 'org-tidy
-  :type 'boolean)
-
 (defun org-tidy-protected-text-edit ()
   "Keymap to protect property drawers."
   (interactive)
@@ -216,11 +211,6 @@ Otherwise return nil."
          (ovly-beg (if is-top-property 1 (1- beg)))
          (ovly-end (if is-top-property end (1- end))))
 
-    (org-tidy--log "org-tidy-properties-single beg:%d, end:%d, ovly-beg:%d, ovly-end:%d, exists:%s"
-                   beg end
-                   ovly-beg ovly-end
-                   (org-tidy-overlay-exists ovly-beg ovly-end))
-
     (when (and should-tidy
                (not (org-tidy-overlay-exists ovly-beg ovly-end)))
       (let* ((backspace-beg (1- end))
@@ -254,8 +244,9 @@ Otherwise return nil."
            (setq push-ovly t)))
 
         (when push-ovly
-          (list :ovly-beg ovly-beg
-                :ovly-end ovly-end
+          (list :beg beg
+                :end end
+                :is-top-property is-top-property
                 :display display)
 
           ;; (org-tidy-make-protect-ov backspace-beg backspace-end
@@ -267,19 +258,58 @@ Otherwise return nil."
          (result nil))
     (while raw-ovs
       (let* ((curr (car raw-ovs))
-             (curr-beg (plist-get curr :ovly-beg))
-             (curr-end (plist-get curr :ovly-end))
+             (curr-beg (plist-get curr :beg))
+             (curr-end (plist-get curr :end))
              (last (car result))
-             (last-end (plist-get last :ovly-end)))
+             (last-end (plist-get last :end)))
         (if (and last (= curr-beg last-end))
-            (setf (car result) (plist-put last :ovly-end curr-end))
+            (setf (car result) (plist-put last :end curr-end))
           (push curr result)))
-      (org-tidy--log "org-tidy--merge-raw-ovs %s" result)
       (setq raw-ovs (cdr raw-ovs)))
     result))
 
-(defun org-tidy--protect (merged-ovs)
-  )
+(defun org-tidy--calc-ovly (merged-ovs)
+  (mapcar (lambda (l)
+            (-let* (((&plist :beg
+                             :end
+                             :is-top-property
+                             :display) l)
+                    (ovly-beg (if is-top-property 1 (1- beg)))
+                    (ovly-end (if is-top-property end (1- end)))
+                    (backspace-beg (1- end))
+                    (backspace-end end)
+                    (del-beg (max 1 (1- beg)))
+                    (del-end (1+ del-beg)))
+              (append l (list :ovly-beg ovly-beg
+                              :ovly-end ovly-end
+                              :backspace-beg backspace-beg
+                              :backspace-end backspace-end
+                              :del-beg del-beg
+                              :del-end del-end))))
+          merged-ovs))
+
+(defun org-tidy--put-overlays (ovs)
+  (dolist (l ovs)
+    (-let* (((&plist :ovly-beg :ovly-end :display
+                     :backspace-beg :backspace-end
+                     :del-beg :del-end) l)
+            (ovly (make-overlay ovly-beg ovly-end nil t nil)))
+
+      (pcase display
+        ('empty (overlay-put ovly 'display ""))
+
+        ('inline-symbol
+         (overlay-put ovly 'display
+                      (format " %s" org-tidy-properties-inline-symbol)))
+
+        ('fringe
+         (overlay-put ovly 'display
+                      '(left-fringe org-tidy-fringe-bitmap-sharp org-drawer))))
+
+      (push (list :type 'property :ov ovly) org-tidy-overlays)
+
+      (org-tidy-make-protect-ov backspace-beg backspace-end
+                                del-beg del-end))))
 
 (defun org-tidy-untidy-buffer ()
   "Untidy."
@@ -299,7 +329,9 @@ Otherwise return nil."
     (let* ((raw-ovs (org-element-map (org-element-parse-buffer)
                     '(property-drawer drawer)
                   #'org-tidy-properties-single)))
-      (org-tidy--merge-raw-ovs raw-ovs))))
+      (org-tidy--put-overlays
+       (org-tidy--calc-ovly
+        (org-tidy--merge-raw-ovs raw-ovs))))))
 
 (defun org-tidy-toggle ()
   "Toggle between tidy and untidy."
@@ -314,15 +346,6 @@ Otherwise return nil."
   "Tidy buffer on save if `org-tidy-toggle-state' is t."
   (interactive)
   (if org-tidy-toggle-state (org-tidy-buffer)))
-
-(defun org-tidy--log (format-string &rest args)
-  (when org-tidy-log
-    (let* ((msg (apply #'format format-string args))
-           (buffer (get-buffer-create "*org-tidy*"))
-           (real-msg (format "%s %s\n" (format-time-string "[%Y-%m-%d %T]") msg)))
-      (with-current-buffer buffer
-        (goto-char (point-max))
-        (insert real-msg)))))
 
 ;;;###autoload
 (define-minor-mode org-tidy-mode
