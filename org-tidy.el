@@ -206,7 +206,7 @@ Otherwise return nil."
                     element
                     org-tidy-property-drawer-property-blacklist))))))))
 
-(defun org-tidy-properties-single (element raw-ovs)
+(defun org-tidy-properties-single (element)
   "Tidy a single property ELEMENT."
   (let* ((content (cadr element))
          (should-tidy (org-tidy-should-tidy element))
@@ -216,7 +216,7 @@ Otherwise return nil."
          (ovly-beg (if is-top-property 1 (1- beg)))
          (ovly-end (if is-top-property end (1- end))))
 
-    (org-tidy--log "beg:%d, end:%d, ovly-beg:%d, ovly-end:%d, exists:%s"
+    (org-tidy--log "org-tidy-properties-single beg:%d, end:%d, ovly-beg:%d, ovly-end:%d, exists:%s"
                    beg end
                    ovly-beg ovly-end
                    (org-tidy-overlay-exists ovly-beg ovly-end))
@@ -227,38 +227,56 @@ Otherwise return nil."
              (backspace-end end)
              (del-beg (max 1 (1- beg)))
              (del-end (1+ del-beg))
-             (ovly (make-overlay ovly-beg ovly-end nil t nil))
-             (push-ovly nil))
+             ;; (ovly (make-overlay ovly-beg ovly-end nil t nil))
+             (push-ovly nil)
+             (display nil))
+
         (pcase (list is-top-property
                      org-tidy-top-property-style
                      org-tidy-properties-style)
           (`(t invisible ,_)
-           (overlay-put ovly 'display "")
-           (setf push-ovly t))
+           ;; (overlay-put ovly 'display "")
+           (setq display 'empty)
+           (setq push-ovly t))
 
-          (`(t keep ,_) (delete-overlay ovly))
+          (`(t keep ,_) )
 
           (`(nil ,_ inline)
-           (overlay-put ovly 'display
-                        (format " %s" org-tidy-properties-inline-symbol))
-           (setf push-ovly t))
+           ;; (overlay-put ovly 'display
+           ;;              (format " %s" org-tidy-properties-inline-symbol))
+           (setq display 'inline-symbol)
+           (setq push-ovly t))
 
           (`(nil ,_ fringe)
-           (overlay-put ovly 'display
-                        '(left-fringe org-tidy-fringe-bitmap-sharp org-drawer))
-           (setf push-ovly t)))
+           ;; (overlay-put ovly 'display
+           ;;              '(left-fringe org-tidy-fringe-bitmap-sharp org-drawer))
+           (setq display 'fringe)
+           (setq push-ovly t)))
 
         (when push-ovly
-          (push (list :ovly-beg ovly-beg
-                      :ovly-end ovly-end)
-                raw-ovs)
+          (list :ovly-beg ovly-beg
+                :ovly-end ovly-end
+                :display display)
 
           ;; (org-tidy-make-protect-ov backspace-beg backspace-end
           ;;                           del-beg del-end)
           )))))
 
 (defun org-tidy--merge-raw-ovs (raw-ovs)
-  )
+  (let* ((last-end nil)
+         (result nil))
+    (while raw-ovs
+      (let* ((curr (car raw-ovs))
+             (curr-beg (plist-get curr :ovly-beg))
+             (curr-end (plist-get curr :ovly-end))
+             (last (car result))
+             (last-end (plist-get last :ovly-end)))
+        (if (and last (= curr-beg last-end))
+            (setf (car result) (plist-put last :ovly-end curr-end))
+          (push curr result)))
+      (org-tidy--log "org-tidy--merge-raw-ovs %s" result)
+      (setq raw-ovs (cdr raw-ovs)))
+    result))
 
 (defun org-tidy--protect (merged-ovs)
   )
@@ -278,10 +296,10 @@ Otherwise return nil."
   "Tidy."
   (interactive)
   (save-excursion
-    (let ((raw-ovs nil))
-      (org-element-map (org-element-parse-buffer)
-          '(property-drawer drawer)
-        (lambda (ele) (org-tidy-properties-single ele raw-ovs))))))
+    (let* ((raw-ovs (org-element-map (org-element-parse-buffer)
+                    '(property-drawer drawer)
+                  #'org-tidy-properties-single)))
+      (org-tidy--merge-raw-ovs raw-ovs))))
 
 (defun org-tidy-toggle ()
   "Toggle between tidy and untidy."
