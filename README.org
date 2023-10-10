@@ -38,33 +38,23 @@ If you need to edit only one drawer temporarily, you can simply ~M-x org-tidy-un
 If you need to edit a lot of drawers, you can ~M-x org-tidy-toggle~. Then the buffer will not be tidied on save, until ~M-x org-tidy-toggle~ again.
 
 * Customize
-** org-tidy-top-property-style
-How to display the property at the beginning of buffer. ~keep~ will do nothing. ~invisible~ will hide it.
+- ~org-tidy-top-property-style~ How to display the property at the beginning of buffer. ~keep~ will do nothing. ~invisible~ will hide it.
 
-** org-tidy-properties-style
-How to display other property drawers.
+- ~org-tidy-properties-style~ How to display other property drawers.
+  - ~fringe~ will hide the property drawer and show a indicator in the left fringe
+  - ~inline~ will hide the property drawer and append a symbol (default to ♯) at the end of previous line
+  - ~invisible~ will just hide the property drawer
 
-- ~fringe~ will hide the property drawer and show a indicator in the left fringe
-- ~inline~ will hide the property drawer and append a symbol (default to ♯) at the end of previous line
-- ~invisible~ will just hide the property drawer
+- ~org-tidy-properties-inline-symbol~ The inline symbol.
 
-** org-tidy-properties-inline-symbol
-The inline symbol.
+- ~org-tidy-property-drawer-flag~ Whether to tidy property drawers.
 
-** org-tidy-property-drawer-flag
-Whether to tidy property drawers.
+- ~org-tidy-property-drawer-property-whitelist~ The whitelist of properties. If set, only property drawers which contain property in this list *will* be tidied.
 
-** org-tidy-property-drawer-property-whitelist
-The whitelist of properties. If set, only property drawers which contain property in this list *will* be tidied.
+- ~org-tidy-property-drawer-property-blacklist~ Blacklist of properties. If set, property drawers which contain property in this list *will not* be tidied.
 
-** org-tidy-property-drawer-property-blacklist
-Blacklist of properties. If set, property drawers which contain property in this list *will not* be tidied.
+- ~org-tidy-general-drawer-flag~ Non-nil means should tidy general drawers.
 
-** org-tidy-general-drawer-flag
-Non-nil means should tidy general drawers.
+- ~org-tidy-general-drawer-name-whitelist~ Whitelist of drawer names. If set, only general drawers whose name is in this list *will* be tidied.
 
-** org-tidy-general-drawer-name-whitelist
-Whitelist of drawer names. If set, only general drawers whose name is in this list *will* be tidied.
-
-** org-tidy-general-drawer-name-blacklist
-Blacklist of drawer names. If set, general drawers whose name is in this list *will not* be tidied.
+- ~org-tidy-general-drawer-name-blacklist~ Blacklist of drawer names. If set, general drawers whose name is in this list *will not* be tidied.
