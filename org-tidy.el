@@ -202,7 +202,7 @@ Otherwise return nil."
                     org-tidy-property-drawer-property-blacklist))))))))
 
 (defun org-tidy--element-to-ov (element)
-  "Tidy a single property ELEMENT."
+  "Turn a single property ELEMENT into a plist for merge."
   (let* ((content (cadr element))
          (should-tidy (org-tidy-should-tidy element))
          (beg (org-element-property :begin element))
@@ -230,6 +230,7 @@ Otherwise return nil."
             :display display))))
 
 (defun org-tidy--merge-raw-ovs (raw-ovs)
+  "Merge adjacent RAW-OVS."
   (let* ((last-end nil)
          (result nil))
     (while raw-ovs
@@ -245,6 +246,7 @@ Otherwise return nil."
     result))
 
 (defun org-tidy--calc-ovly (merged-ovs)
+  "Calculate overlay and protect regions for MERGED-OVS."
   (mapcar (lambda (l)
             (-let* (((&plist :beg
                              :end
@@ -265,6 +267,7 @@ Otherwise return nil."
           merged-ovs))
 
 (defun org-tidy--put-overlays (ovs)
+  "Put overlays from OVS."
   (dolist (l ovs)
     (-let* (((&plist :ovly-beg :ovly-end :display
                      :backspace-beg :backspace-end
