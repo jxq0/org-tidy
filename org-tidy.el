@@ -203,15 +203,15 @@ Otherwise return nil."
 
 (defun org-tidy--element-to-ov (element)
   "Turn a single property ELEMENT into a plist for merge."
-  (let* ((content (cadr element))
-         (should-tidy (org-tidy-should-tidy element))
+  (let* ((should-tidy (org-tidy-should-tidy element))
          (beg (org-element-property :begin element))
          (end (org-element-property :end element))
          (is-top-property (= 1 beg))
          (push-ovly nil)
          (display nil))
 
-    (pcase (list is-top-property org-tidy-top-property-style org-tidy-properties-style)
+    (pcase (list is-top-property org-tidy-top-property-style
+                 org-tidy-properties-style)
       (`(t invisible ,_)
        (setq display 'empty push-ovly t))
 
@@ -231,8 +231,7 @@ Otherwise return nil."
 
 (defun org-tidy--merge-raw-ovs (raw-ovs)
   "Merge adjacent RAW-OVS."
-  (let* ((last-end nil)
-         (result nil))
+  (let* ((result nil))
     (while raw-ovs
       (let* ((curr (car raw-ovs))
              (curr-beg (plist-get curr :beg))
@@ -250,8 +249,7 @@ Otherwise return nil."
   (mapcar (lambda (l)
             (-let* (((&plist :beg
                              :end
-                             :is-top-property
-                             :display) l)
+                             :is-top-property) l)
                     (ovly-beg (if is-top-property 1 (1- beg)))
                     (ovly-end (if is-top-property end (1- end)))
                     (backspace-beg (1- end))
@@ -269,10 +267,11 @@ Otherwise return nil."
 (defun org-tidy--put-overlays (ovs)
   "Put overlays from OVS."
   (dolist (l ovs)
-    (-let* (((&plist :ovly-beg :ovly-end :display
-                     :backspace-beg :backspace-end
-                     :del-beg :del-end) l)
-            (ovly (make-overlay ovly-beg ovly-end nil t nil)))
+    (-when-let* (((&plist :ovly-beg :ovly-end :display
+                          :backspace-beg :backspace-end
+                          :del-beg :del-end) l)
+                 (not-exists (not (org-tidy-overlay-exists ovly-beg ovly-end)))
+                 (ovly (make-overlay ovly-beg ovly-end nil t nil)))
 
       (pcase display
         ('empty (overlay-put ovly 'display ""))
