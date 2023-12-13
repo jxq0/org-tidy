@@ -28,8 +28,8 @@ After org-tidy mode is turned on, these property drawers are hidden. And the sym
 #+begin_src emacs-lisp
 (use-package org-tidy
   :ensure t
-  :config
-  (add-hook 'org-mode-hook #'org-tidy-mode))
+  :hook
+  (org-mode . org-tidy-mode))
 #+end_src
 
 ** How to edit property drawers in org-tidy-mode?
