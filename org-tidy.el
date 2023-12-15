@@ -99,6 +99,11 @@ will not be tidied."
   :group 'org-tidy
   :type '(repeat string))
 
+(defcustom org-tidy-protect-overlay t
+  "If non-nil, org-tidy will protect the overlay by changing local-map."
+  :group 'org-tidy
+  :type 'boolean)
+
 (defun org-tidy-protected-text-edit ()
   "Keymap to protect property drawers."
   (interactive)
@@ -286,8 +291,9 @@ Otherwise return nil."
 
       (push (list :type 'property :ov ovly) org-tidy-overlays)
 
-      (org-tidy-make-protect-ov backspace-beg backspace-end
-                                del-beg del-end))))
+      (if org-tidy-protect-overlay
+          (org-tidy-make-protect-ov backspace-beg backspace-end
+                                    del-beg del-end)))))
 
 (defun org-tidy-untidy-buffer ()
   "Untidy."
