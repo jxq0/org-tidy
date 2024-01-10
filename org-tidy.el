@@ -222,6 +222,9 @@ Otherwise return nil."
 
       (`(t keep ,_) )
 
+      (`(nil ,_ invisible)
+       (setq display 'empty push-ovly t))
+
       (`(nil ,_ inline)
        (setq display 'inline-symbol push-ovly t))
 
