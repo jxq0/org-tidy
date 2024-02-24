@@ -273,15 +273,24 @@ Otherwise return nil."
           merged-ovs))
 
 (defun org-tidy--put-overlays (ovs)
-  "Put overlays from OVS."
+  "Put overlays from OVS, ensuring newline after drawer is kept."
   (dolist (l ovs)
     (-when-let* (((&plist :ovly-beg :ovly-end :display
                           :backspace-beg :backspace-end
                           :del-beg :del-end) l)
                  (not-exists (not (org-tidy-overlay-exists ovly-beg ovly-end)))
-                 (ovly (make-overlay ovly-beg ovly-end nil t nil)))
+                 ;; Adjust ovly-end to keep newline after drawer
+                 (adjusted-ovly-end (if
+		 ;; check i there is a newline after
+(save-excursion
+    (goto-char ovly-end)
+    (looking-at-p "\n"))
 
-      (pcase display
+
+                                        (1- ovly-end)
+                                      ovly-end))
+                 (ovly (make-overlay ovly-beg adjusted-ovly-end nil t nil)))
+(pcase display
         ('empty (overlay-put ovly 'display ""))
 
         ('inline-symbol
@@ -294,9 +303,9 @@ Otherwise return nil."
 
       (push (list :type 'property :ov ovly) org-tidy-overlays)
 
-      (if org-tidy-protect-overlay
-          (org-tidy-make-protect-ov backspace-beg backspace-end
-                                    del-beg del-end)))))
+      (org-tidy-make-protect-ov backspace-beg backspace-end
+                                del-beg del-end)
+    )))
 
 (defun org-tidy-untidy-buffer ()
   "Untidy."
