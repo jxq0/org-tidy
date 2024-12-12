@@ -30,6 +30,23 @@
 (require 'org-element)
 (require 'dash)
 
+(eval-when-compile
+  (require 'org))
+
+(defconst org-tidy-org-9.6-version "9.6"
+  "Org mode version that changed element API.")
+
+(defun org-tidy--get-element-pos (element type)
+  "Get position of TYPE from ELEMENT based on org version."
+  (if (version< org-version org-tidy-org-9.6-version)
+      ;; 老版本使用 property
+      (org-element-property type element)
+    ;; 新版本使用函数
+    (pcase type
+      (:begin (org-element-begin element))
+      (:end (org-element-end element))
+      (_ (org-element-property type element)))))
+
 ;;; Code:
 
 (defgroup org-tidy nil
@@ -209,8 +226,8 @@ Otherwise return nil."
 (defun org-tidy--element-to-ov (element)
   "Turn a single property ELEMENT into a plist for merge."
   (let* ((should-tidy (org-tidy-should-tidy element))
-         (beg (org-element-property :begin element))
-         (end (org-element-property :end element))
+         (beg (org-tidy--get-element-pos element :begin))
+         (end (org-tidy--get-element-pos element :end))
          (is-top-property (= 1 beg))
          (push-ovly nil)
          (display nil))
@@ -274,29 +291,36 @@ Otherwise return nil."
 
 (defun org-tidy--put-overlays (ovs)
   "Put overlays from OVS."
+  (unless (listp ovs)
+    (signal 'wrong-type-argument (list 'listp ovs)))
+
   (dolist (l ovs)
     (-when-let* (((&plist :ovly-beg :ovly-end :display
                           :backspace-beg :backspace-end
                           :del-beg :del-end) l)
+                 (valid-pos (and (numberp ovly-beg)
+                               (numberp ovly-end)
+                               (> ovly-end ovly-beg)))
                  (not-exists (not (org-tidy-overlay-exists ovly-beg ovly-end)))
-                 (ovly (make-overlay ovly-beg ovly-end nil t nil)))
+                 (ovly (ignore-errors
+                        (make-overlay ovly-beg ovly-end nil t nil))))
+      (when ovly
+        (pcase display
+          ('empty (overlay-put ovly 'display ""))
 
-      (pcase display
-        ('empty (overlay-put ovly 'display ""))
+          ('inline-symbol
+           (overlay-put ovly 'display
+                        (format " %s" org-tidy-properties-inline-symbol)))
 
-        ('inline-symbol
-         (overlay-put ovly 'display
-                      (format " %s" org-tidy-properties-inline-symbol)))
+          ('fringe
+           (overlay-put ovly 'display
+                        '(left-fringe org-tidy-fringe-bitmap-sharp org-drawer))))
 
-        ('fringe
-         (overlay-put ovly 'display
-                      '(left-fringe org-tidy-fringe-bitmap-sharp org-drawer))))
+        (push (list :type 'property :ov ovly) org-tidy-overlays)
 
-      (push (list :type 'property :ov ovly) org-tidy-overlays)
-
-      (if org-tidy-protect-overlay
-          (org-tidy-make-protect-ov backspace-beg backspace-end
-                                    del-beg del-end)))))
+        (if org-tidy-protect-overlay
+            (org-tidy-make-protect-ov backspace-beg backspace-end
+                                      del-beg del-end))))))
 
 (defun org-tidy-untidy-buffer ()
   "Untidy."
@@ -313,12 +337,18 @@ Otherwise return nil."
   "Tidy."
   (interactive)
   (save-excursion
-    (let* ((raw-ovs (org-element-map (org-element-parse-buffer)
-                    '(property-drawer drawer)
-                    #'org-tidy--element-to-ov)))
-      (org-tidy--put-overlays
-       (org-tidy--calc-ovly
-        (org-tidy--merge-raw-ovs raw-ovs))))))
+    (condition-case err
+        (let* ((ast (org-element-parse-buffer))
+               (raw-ovs (org-element-map ast
+                           '(property-drawer drawer)
+                         (lambda (element)
+                           (org-tidy--element-to-ov element)))))
+          (org-tidy--put-overlays
+           (org-tidy--calc-ovly
+            (org-tidy--merge-raw-ovs raw-ovs))))
+      (error
+       (message "org-tidy error: %S" err)
+       nil))))
 
 (defun org-tidy-toggle ()
   "Toggle between tidy and untidy."
@@ -334,11 +364,23 @@ Otherwise return nil."
   (interactive)
   (if org-tidy-toggle-state (org-tidy-buffer)))
 
+(defconst org-tidy-min-org-version "9.3"
+  "Minimum supported Org mode version.")
+
+(defun org-tidy--check-compatibility ()
+  "Check if current Org mode version is compatible."
+  (when (version< org-version org-tidy-min-org-version)
+    (display-warning 'org-tidy
+                    (format "org-tidy requires Org mode %s or later"
+                            org-tidy-min-org-version))))
+
 ;;;###autoload
 (define-minor-mode org-tidy-mode
   "Automatically tidy org mode buffers."
   :global nil
   :group 'org-tidy
+  (when org-tidy-mode
+    (org-tidy--check-compatibility))
   (if org-tidy-mode
       (progn
         (if (eq org-tidy-properties-style 'fringe)
