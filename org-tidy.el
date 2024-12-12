@@ -33,12 +33,9 @@
 (eval-when-compile
   (require 'org))
 
-(defconst org-tidy-org-9.6-version "9.6"
-  "Org mode version that changed element API.")
-
 (defun org-tidy--get-element-pos (element type)
   "Get position of TYPE from ELEMENT based on org version."
-  (if (version< org-version org-tidy-org-9.6-version)
+  (if (version< org-version "9.7")
       ;; 老版本使用 property
       (org-element-property type element)
     ;; 新版本使用函数
